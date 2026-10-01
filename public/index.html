@@ -8,9 +8,13 @@
       :root { --navy: #163b62; --blue: #1769aa; --blue-dark: #115282; --sky: #eaf5fc; --line: #d7e1eb; --text: #172433; --muted: #617082; --white: #fff; }
       * { box-sizing: border-box; }
       body { margin: 0; min-width: 320px; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
-      .app-header { padding: 18px clamp(20px, 5vw, 72px); background: var(--navy); color: var(--white); }
+      .app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 5vw, 72px); background: var(--navy); color: var(--white); }
+      .header-title { min-width: 0; }
       .brand { margin: 0; font-size: clamp(1.25rem, 3vw, 1.75rem); letter-spacing: .04em; }
       .brand-note { margin: 6px 0 0; color: #c8dced; font-size: .875rem; }
+      .sync-button { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid #91b8d5; border-radius: 10px; background: transparent; color: var(--white); cursor: pointer; font-size: 1.8rem; line-height: 1; }
+      .sync-button:hover { background: rgb(255 255 255 / 12%); }
+      .sync-button:focus-visible { outline: 3px solid #79b8e8; outline-offset: 3px; }
       main { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 56px; }
       .welcome { margin-bottom: 28px; }
       .welcome h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.25rem); }
@@ -32,8 +36,11 @@
   </head>
   <body>
     <header class="app-header">
-      <p class="brand">ワークマンアプリ</p>
-      <p class="brand-note">受付伝票・作業履歴管理</p>
+      <div class="header-title">
+        <p class="brand">ワークマンアプリ</p>
+        <p class="brand-note">受付伝票・作業履歴管理</p>
+      </div>
+      <button class="sync-button" type="button" data-action="同期" aria-label="同期" title="同期">↻</button>
     </header>
     <main>
       <section class="welcome" aria-labelledby="page-title">
@@ -42,8 +49,6 @@
       </section>
       <section class="actions" aria-label="操作メニュー">
         <button class="action" type="button" data-action="検索"><span class="action-inner"><span class="action-icon" aria-hidden="true">⌕</span><span class="action-title">検索</span><span class="action-description">受付・お客様・商品情報から過去の履歴を検索します。</span></span></button>
-        <button class="action" type="button" data-action="同期"><span class="action-inner"><span class="action-icon" aria-hidden="true">↻</span><span class="action-title">同期</span><span class="action-description">最新の情報を読み込みます。</span></span></button>
-        <button class="action" type="button" data-action="複数選択"><span class="action-inner"><span class="action-icon" aria-hidden="true">☑</span><span class="action-title">複数選択</span><span class="action-description">複数の受付情報をまとめて選択します。</span></span></button>
         <button class="action action--primary" type="button" data-action="新規追加"><span class="action-inner"><span class="action-icon" aria-hidden="true">＋</span><span class="action-title">新規追加</span><span class="action-description">新しい受付伝票を登録します。</span></span></button>
       </section>
       <p class="status" id="status" aria-live="polite">メニューを選択してください。</p>
