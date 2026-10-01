@@ -21,6 +21,17 @@ npm start
 
 現時点ではNode.js標準機能だけを使っており、追加のバックエンド用アプリやパッケージの導入は不要です。
 
+## サービス管理EXE
+
+`tools/WorkmanServiceManager` に、ローカルWebサーバーを起動・状態確認するWindows用管理アプリのソースがあります。ビルド済みEXEは `tools/WorkmanServiceManager/publish/WorkmanServiceManager.exe` です。
+
+- ビルド済みの `WorkmanServiceManager.exe` を起動すると、サーバーが稼働中か確認できます。
+- 停止中の場合は「サーバーを起動」を押すと、プロジェクト内の `server.mjs` を起動します。
+- 「サーバーを停止」は、ポート3000で稼働しているNode.jsのWebサーバーを確認ダイアログ後に停止します。
+- このEXEはPC起動時の自動起動を設定するものではありません。PC起動後に手動で起動してください。
+- Webアプリの起動にはNode.jsが必要です。
+- このビルド済みEXEの実行には .NET 9 Desktop Runtime が必要です（開発PCには導入済み）。
+
 ## 画面
 
 ### タイトル画面

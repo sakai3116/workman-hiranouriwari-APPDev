@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "Rc6Yy4AVczU=",
+  "success": true,
+  "projectFilePath": "C:\\my_dev\\workman-hiranouriwari-APPDev\\tools\\WorkmanServiceManager\\WorkmanServiceManager.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\kalar\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.4\\microsoft.net.illink.tasks.9.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}
