@@ -4,10 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ワークマンアプリ</title>
+    <style>
+      :root { --navy: #163b62; --blue: #1769aa; --blue-dark: #115282; --sky: #eaf5fc; --line: #d7e1eb; --text: #172433; --muted: #617082; --white: #fff; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
+      .app-header { padding: 18px clamp(20px, 5vw, 72px); background: var(--navy); color: var(--white); }
+      .brand { margin: 0; font-size: clamp(1.25rem, 3vw, 1.75rem); letter-spacing: .04em; }
+      .brand-note { margin: 6px 0 0; color: #c8dced; font-size: .875rem; }
+      main { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 56px; }
+      .welcome { margin-bottom: 28px; }
+      .welcome h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.25rem); }
+      .welcome p { margin: 10px 0 0; color: var(--muted); }
+      .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .action { display: flex; min-height: 150px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--white); color: inherit; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgb(23 49 74 / 5%); transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
+      .action:hover { transform: translateY(-2px); border-color: #8eb9da; box-shadow: 0 8px 22px rgb(23 49 74 / 12%); }
+      .action:focus-visible { outline: 3px solid #79b8e8; outline-offset: 3px; }
+      .action--primary { border-color: var(--blue); background: var(--blue); color: var(--white); }
+      .action--primary:hover { border-color: var(--blue-dark); background: var(--blue-dark); }
+      .action-inner { align-self: center; }
+      .action-icon { display: block; margin-bottom: 12px; font-size: 1.75rem; line-height: 1; }
+      .action-title { display: block; font-size: 1.2rem; font-weight: 700; }
+      .action-description { display: block; margin-top: 7px; color: var(--muted); font-size: .9rem; line-height: 1.55; }
+      .action--primary .action-description { color: #d8ebfa; }
+      .status { min-height: 24px; margin: 26px 0 0; padding: 12px 16px; border-radius: 8px; background: var(--sky); color: #275879; font-size: .9rem; }
+      @media (max-width: 600px) { main { width: min(100% - 28px, 960px); padding-top: 30px; } .actions { grid-template-columns: 1fr; } .action { min-height: 128px; } }
+    </style>
   </head>
   <body>
+    <header class="app-header">
+      <p class="brand">ワークマンアプリ</p>
+      <p class="brand-note">受付伝票・作業履歴管理</p>
+    </header>
     <main>
-      <h1>Hello World</h1>
+      <section class="welcome" aria-labelledby="page-title">
+        <h1 id="page-title">メニュー</h1>
+        <p>実行したい操作を選択してください。</p>
+      </section>
+      <section class="actions" aria-label="操作メニュー">
+        <button class="action" type="button" data-action="検索"><span class="action-inner"><span class="action-icon" aria-hidden="true">⌕</span><span class="action-title">検索</span><span class="action-description">受付・お客様・商品情報から過去の履歴を検索します。</span></span></button>
+        <button class="action" type="button" data-action="同期"><span class="action-inner"><span class="action-icon" aria-hidden="true">↻</span><span class="action-title">同期</span><span class="action-description">最新の情報を読み込みます。</span></span></button>
+        <button class="action" type="button" data-action="複数選択"><span class="action-inner"><span class="action-icon" aria-hidden="true">☑</span><span class="action-title">複数選択</span><span class="action-description">複数の受付情報をまとめて選択します。</span></span></button>
+        <button class="action action--primary" type="button" data-action="新規追加"><span class="action-inner"><span class="action-icon" aria-hidden="true">＋</span><span class="action-title">新規追加</span><span class="action-description">新しい受付伝票を登録します。</span></span></button>
+      </section>
+      <p class="status" id="status" aria-live="polite">メニューを選択してください。</p>
     </main>
+    <script>
+      const status = document.querySelector('#status');
+      document.querySelectorAll('[data-action]').forEach((button) => {
+        button.addEventListener('click', () => {
+          status.textContent = `「${button.dataset.action}」を選択しました。機能は今後追加します。`;
+        });
+      });
+    </script>
   </body>
 </html>
