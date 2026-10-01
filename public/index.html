@@ -5,32 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ワークマンアプリ</title>
     <style>
-      :root { --navy: #163b62; --blue: #1769aa; --blue-dark: #115282; --sky: #eaf5fc; --line: #d7e1eb; --text: #172433; --muted: #617082; --white: #fff; }
+      :root { --navy: #f2aa20; --blue: #f2aa20; --blue-dark: #d9910c; --sky: #fff4d8; --line: #e7d7b5; --text: #172433; --muted: #617082; --white: #fff; }
       * { box-sizing: border-box; }
       body { margin: 0; min-width: 320px; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
-      .app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 5vw, 72px); background: var(--navy); color: var(--white); }
+      .app-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 5vw, 72px); background: var(--navy); color: var(--text); }
       .header-title { min-width: 0; }
       .brand { margin: 0; font-size: clamp(1.25rem, 3vw, 1.75rem); letter-spacing: .04em; }
-      .brand-note { margin: 6px 0 0; color: #c8dced; font-size: .875rem; }
-      .sync-button { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid #91b8d5; border-radius: 10px; background: transparent; color: var(--white); cursor: pointer; font-size: 1.8rem; line-height: 1; }
-      .sync-button:hover { background: rgb(255 255 255 / 12%); }
-      .sync-button:focus-visible { outline: 3px solid #79b8e8; outline-offset: 3px; }
+      .brand-note { margin: 6px 0 0; color: #624a17; font-size: .875rem; }
+      .sync-button { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid #805e16; border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-size: 1.8rem; line-height: 1; }
+      .sync-button:hover { background: rgb(255 255 255 / 30%); }
+      .sync-button:focus-visible { outline: 3px solid #765000; outline-offset: 3px; }
       main { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 56px; }
       .welcome { margin-bottom: 28px; }
       .welcome h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.25rem); }
       .welcome p { margin: 10px 0 0; color: var(--muted); }
       .actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
       .action { display: flex; min-height: 150px; padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--white); color: inherit; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgb(23 49 74 / 5%); transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
-      .action:hover { transform: translateY(-2px); border-color: #8eb9da; box-shadow: 0 8px 22px rgb(23 49 74 / 12%); }
-      .action:focus-visible { outline: 3px solid #79b8e8; outline-offset: 3px; }
-      .action--primary { border-color: var(--blue); background: var(--blue); color: var(--white); }
+      .action:hover { transform: translateY(-2px); border-color: #e0ad46; box-shadow: 0 8px 22px rgb(82 61 18 / 12%); }
+      .action:focus-visible { outline: 3px solid #e0ad46; outline-offset: 3px; }
+      .action--primary { border-color: var(--blue); background: var(--blue); color: var(--text); }
       .action--primary:hover { border-color: var(--blue-dark); background: var(--blue-dark); }
       .action-inner { align-self: center; }
       .action-icon { display: block; margin-bottom: 12px; font-size: 1.75rem; line-height: 1; }
       .action-title { display: block; font-size: 1.2rem; font-weight: 700; }
       .action-description { display: block; margin-top: 7px; color: var(--muted); font-size: .9rem; line-height: 1.55; }
-      .action--primary .action-description { color: #d8ebfa; }
-      .status { min-height: 24px; margin: 26px 0 0; padding: 12px 16px; border-radius: 8px; background: var(--sky); color: #275879; font-size: .9rem; }
+      .action--primary .action-description { color: #4c390e; }
+      .status { min-height: 24px; margin: 26px 0 0; padding: 12px 16px; border-radius: 8px; background: var(--sky); color: #634a14; font-size: .9rem; }
       @media (max-width: 600px) { main { width: min(100% - 28px, 960px); padding-top: 30px; } .actions { grid-template-columns: 1fr; } .action { min-height: 128px; } }
     </style>
   </head>
