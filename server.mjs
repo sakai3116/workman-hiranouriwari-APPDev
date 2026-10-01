@@ -8,14 +8,21 @@ const port = Number(process.env.PORT ?? 3000);
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
 const server = createServer(async (request, response) => {
-  if (request.method !== 'GET' || request.url !== '/') {
+  const requestUrl = new URL(request.url ?? '/', `http://${host}`);
+  const pathname = requestUrl.pathname === '/new/' ? '/new' : requestUrl.pathname;
+  const pages = {
+    '/': 'index.html',
+    '/new': 'new-entry.html',
+  };
+
+  if (request.method !== 'GET' || !pages[pathname]) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Not Found');
     return;
   }
 
   try {
-    const page = await readFile(join(projectRoot, 'public', 'index.html'));
+    const page = await readFile(join(projectRoot, 'public', pages[pathname]));
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     response.end(page);
   } catch (error) {

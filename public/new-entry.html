@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新規追加 | ワークマンアプリ</title>
+    <style>
+      :root { --yellow: #f2aa20; --yellow-dark: #d9910c; --cream: #fff4d8; --line: #e7d7b5; --text: #172433; --muted: #617082; --white: #fff; --danger: #a93636; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
+      .app-header { display: flex; align-items: center; gap: 14px; padding: 16px clamp(16px, 5vw, 72px); background: var(--yellow); }
+      .back-button { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #805e16; border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; font-size: 1.45rem; }
+      .back-button:hover { background: rgb(255 255 255 / 30%); }
+      .app-header h1 { margin: 0; font-size: clamp(1.2rem, 3vw, 1.55rem); }
+      main { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 56px; }
+      .page-note { margin: 0 0 24px; color: var(--muted); font-size: .9rem; }
+      .form-section { margin-top: 18px; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 14px; background: var(--white); box-shadow: 0 2px 8px rgb(82 61 18 / 5%); }
+      .form-section h2 { margin: 0 0 18px; padding-bottom: 12px; border-bottom: 3px solid var(--yellow); font-size: 1.12rem; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .full { grid-column: 1 / -1; }
+      label, .field-label { display: block; color: #314152; font-size: .9rem; font-weight: 700; }
+      .required::after { margin-left: 4px; color: var(--danger); content: "必須"; font-size: .72rem; }
+      input, select, textarea { width: 100%; margin-top: 7px; padding: 10px 11px; border: 1px solid #bfcbd6; border-radius: 7px; background: var(--white); color: var(--text); font: inherit; font-size: .95rem; }
+      textarea { min-height: 90px; resize: vertical; }
+      input:focus, select:focus, textarea:focus { outline: 3px solid #f8d88d; border-color: var(--yellow-dark); }
+      .check-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+      .check-list label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 400; cursor: pointer; }
+      .check-list input { width: auto; margin: 0; accent-color: var(--yellow-dark); }
+      .details { display: none; margin-top: 18px; padding: 16px; border-radius: 9px; background: var(--cream); }
+      .details.is-visible { display: block; }
+      .product-card { margin-top: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fffcf5; }
+      .product-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+      .product-head h3 { margin: 0; font-size: 1rem; }
+      .button { padding: 10px 16px; border: 1px solid var(--yellow-dark); border-radius: 8px; background: var(--yellow); color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+      .button:hover { background: var(--yellow-dark); }
+      .button--secondary { border-color: #b9a77c; background: var(--white); }
+      .button--danger { border-color: #d9a6a6; background: #fff5f5; color: var(--danger); font-size: .82rem; }
+      .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+      .form-status { min-height: 22px; margin: 16px 0 0; padding: 10px 12px; border-radius: 7px; background: var(--cream); color: #634a14; font-size: .9rem; }
+      @media (max-width: 680px) { .grid, .grid--three { grid-template-columns: 1fr; } main { width: min(100% - 24px, 960px); padding-top: 22px; } .form-section { padding: 18px; } }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <button class="back-button" type="button" id="back-button" aria-label="タイトル画面に戻る">←</button>
+      <h1>新規追加</h1>
+    </header>
+    <main>
+      <p class="page-note">受付内容を入力してください。<span class="required">必須</span>の項目は登録時に確認します。</p>
+      <form id="entry-form">
+        <section class="form-section" aria-labelledby="receipt-heading">
+          <h2 id="receipt-heading">受付情報</h2>
+          <div class="grid">
+            <label>アプリ内番号<input name="request-id" type="text" placeholder="登録時に自動採番" readonly /></label>
+            <label>アプリ登録日<input name="registered-date" type="date" /></label>
+            <label class="required">受付日<input name="received-date" type="date" required /></label>
+            <label>受付担当者<select name="staff"><option>指定なし</option><option>店長（イシダ）</option></select></label>
+            <label class="required">お客様名<input name="customer-name" type="text" required /></label>
+            <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
+            <label class="required">電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" required /></label>
+            <label>伝票写真<input name="slip-photo" type="file" accept="image/*" capture="environment" /></label>
+            <div class="full"><span class="field-label">作業内容</span><div class="check-list" id="work-types"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="予約" />予約</label><label><input type="checkbox" value="見積" />見積</label><label><input type="checkbox" value="その他" />その他</label></div></div>
+            <label class="full details" id="other-details">その他の作業内容<textarea name="other-work" placeholder="作業内容を入力してください"></textarea></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="product-heading">
+          <h2 id="product-heading">商品情報</h2>
+          <div id="product-list"></div>
+          <button class="button button--secondary" type="button" id="add-product">＋ 商品を追加</button>
+        </section>
+
+        <section class="form-section" aria-labelledby="detail-heading">
+          <h2 id="detail-heading">作業詳細</h2>
+          <div class="details" id="embroidery-details"><div class="grid"><label>刺繍・プリント位置<input name="position" type="text" /></label><label>糸色・書体<input name="thread-font" type="text" /></label><label class="full">刺繍・プリント内容<textarea name="embroidery-content"></textarea></label></div></div>
+          <div class="details" id="hemming-details"><div class="grid grid--three"><label>裾上げ方法<select name="hemming-method"><option value="">選択してください</option><option>総丈</option><option>股下</option><option>裾から何cm</option></select></label><label>長さ（cm）<input name="length" type="number" min="0" step="0.1" /></label><label>裾上げ糸色<input name="hemming-thread" type="text" /></label><label>余り布の有無<select name="remaining-fabric"><option value="">選択してください</option><option>破棄</option><option>お渡し</option><option>その他</option></select></label><label class="full">裾上げ備考<textarea name="hemming-notes"></textarea></label></div></div>
+          <p id="no-detail" class="page-note">刺繍・プリントまたは裾上げを選択すると、詳細入力欄が表示されます。</p>
+        </section>
+
+        <section class="form-section" aria-labelledby="payment-heading">
+          <h2 id="payment-heading">金額・確認</h2>
+          <div class="grid">
+            <label>注文金額<input name="amount" type="number" min="0" inputmode="numeric" /></label>
+            <label>売掛金<select name="accounts-receivable"><option>なし</option><option>あり</option></select></label>
+            <label>内金<select name="deposit"><option>なし</option><option>あり</option></select></label>
+            <label>確認状態<select name="confirmation"><option>要確認</option><option>登録済み</option></select></label>
+            <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
+            <label class="full">完成写真<input name="completed-photo" type="file" accept="image/*" multiple /></label>
+          </div>
+        </section>
+        <div class="actions"><button class="button button--secondary" type="button" id="cancel">キャンセル</button><button class="button" type="submit">登録内容を確認</button></div>
+        <p class="form-status" id="form-status" aria-live="polite">入力内容はまだ保存されません。</p>
+      </form>
+    </main>
+    <template id="product-template"><article class="product-card"><div class="product-head"><h3>商品</h3><button class="button button--danger remove-product" type="button">削除</button></div><div class="grid grid--three"><label>5桁管理番号<input name="product-number" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" /></label><label>枝番<input name="branch-number" type="text" /></label><label>管理番号＋枝番<input name="combined-number" type="text" readonly /></label><label>商品名<input name="product-name" type="text" /></label><label>色<input name="color" type="text" /></label><label>サイズ<input name="size" type="text" /></label><label>個数<input name="quantity" type="number" min="1" value="1" /></label><label class="full">商品ごとの作業状態<div class="check-list"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="持ち込み" />持ち込み</label></div></label></div></article></template>
+    <script>
+      const productList = document.querySelector('#product-list');
+      const productTemplate = document.querySelector('#product-template');
+      const addProduct = () => {
+        const product = productTemplate.content.cloneNode(true);
+        product.querySelector('.remove-product').addEventListener('click', (event) => event.target.closest('.product-card').remove());
+        productList.append(product);
+      };
+      document.querySelector('#add-product').addEventListener('click', addProduct);
+      addProduct();
+      document.querySelector('#back-button').addEventListener('click', () => { window.location.href = '/'; });
+      document.querySelector('#cancel').addEventListener('click', () => { window.location.href = '/'; });
+      const updateDetails = () => {
+        const selected = [...document.querySelectorAll('#work-types input:checked')].map((input) => input.value);
+        document.querySelector('#other-details').classList.toggle('is-visible', selected.includes('その他'));
+        document.querySelector('#embroidery-details').classList.toggle('is-visible', selected.includes('刺繍') || selected.includes('プリント'));
+        document.querySelector('#hemming-details').classList.toggle('is-visible', selected.includes('裾上げ'));
+        document.querySelector('#no-detail').hidden = selected.includes('刺繍') || selected.includes('プリント') || selected.includes('裾上げ');
+      };
+      document.querySelector('#work-types').addEventListener('change', updateDetails);
+      document.querySelector('#entry-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        document.querySelector('#form-status').textContent = '登録処理は次の実装で追加します。現在は入力画面のみです。';
+      });
+      const today = new Date().toISOString().slice(0, 10);
+      document.querySelector('[name="registered-date"]').value = today;
+      document.querySelector('[name="received-date"]').value = today;
+    </script>
+  </body>
+</html>
