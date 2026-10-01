@@ -27,6 +27,17 @@
       .check-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
       .check-list label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 400; cursor: pointer; }
       .check-list input { width: auto; margin: 0; accent-color: var(--yellow-dark); }
+      .photo-preview { margin-top: 2px; padding: 12px; border: 2px solid var(--yellow); border-radius: 10px; background: #fffcf5; }
+      .photo-preview[hidden] { display: none; }
+      .photo-preview-label { margin: 0 0 10px; color: #634a14; font-size: .85rem; font-weight: 700; }
+      .photo-preview-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .photo-card { position: relative; min-width: 0; }
+      .photo-preview-button { display: block; width: 100%; padding: 0; border: 0; border-radius: 6px; background: #222; cursor: zoom-in; overflow: hidden; }
+      .photo-preview-button img { display: block; width: 100%; max-height: 260px; object-fit: contain; }
+      .remove-photo { position: absolute; top: 7px; right: 7px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #d9a6a6; border-radius: 8px; background: #fff5f5; color: var(--danger); cursor: pointer; font: inherit; font-size: 1.35rem; line-height: 1; font-weight: 700; box-shadow: 0 1px 4px rgb(0 0 0 / 18%); }
+      .remove-photo:hover { background: #ffe4e4; }
+      .remove-photo:focus-visible { outline: 3px solid #e8a8a8; outline-offset: 2px; }
+      .photo-number { margin: 6px 0 0; color: var(--muted); font-size: .8rem; }
       .details { display: none; margin-top: 18px; padding: 16px; border-radius: 9px; background: var(--cream); }
       .details.is-visible { display: block; }
       .product-card { margin-top: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fffcf5; }
@@ -38,6 +49,10 @@
       .button--danger { border-color: #d9a6a6; background: #fff5f5; color: var(--danger); font-size: .82rem; }
       .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
       .form-status { min-height: 22px; margin: 16px 0 0; padding: 10px 12px; border-radius: 7px; background: var(--cream); color: #634a14; font-size: .9rem; }
+      .image-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 88%); }
+      .image-modal[hidden] { display: none; }
+      .modal-close { position: fixed; top: 20px; left: 20px; width: 46px; height: 46px; border: 0; border-radius: 50%; background: rgb(255 255 255 / 15%); color: var(--white); cursor: pointer; font-size: 2rem; line-height: 1; }
+      .image-modal img { max-width: min(92vw, 900px); max-height: 88vh; object-fit: contain; }
       @media (max-width: 680px) { .grid, .grid--three { grid-template-columns: 1fr; } main { width: min(100% - 24px, 960px); padding-top: 22px; } .form-section { padding: 18px; } }
     </style>
   </head>
@@ -59,7 +74,8 @@
             <label class="required">お客様名<input name="customer-name" type="text" required /></label>
             <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
             <label class="required">電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" required /></label>
-            <label>伝票写真<input name="slip-photo" type="file" accept="image/*" capture="environment" /></label>
+            <label>伝票写真<input id="slip-photo" name="slip-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="full photo-preview" id="slip-preview" hidden><p class="photo-preview-label">添付した伝票写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="slip-preview-list"></div></div>
             <div class="full"><span class="field-label">作業内容</span><div class="check-list" id="work-types"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="予約" />予約</label><label><input type="checkbox" value="見積" />見積</label><label><input type="checkbox" value="その他" />その他</label></div></div>
             <label class="full details" id="other-details">その他の作業内容<textarea name="other-work" placeholder="作業内容を入力してください"></textarea></label>
           </div>
@@ -86,7 +102,8 @@
             <label>内金<select name="deposit"><option>なし</option><option>あり</option></select></label>
             <label>確認状態<select name="confirmation"><option>要確認</option><option>登録済み</option></select></label>
             <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
-            <label class="full">完成写真<input name="completed-photo" type="file" accept="image/*" multiple /></label>
+            <label class="full">完成写真<input id="completed-photo" name="completed-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="full photo-preview" id="completed-preview" hidden><p class="photo-preview-label">添付した完成写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="completed-preview-list"></div></div>
           </div>
         </section>
         <div class="actions"><button class="button button--secondary" type="button" id="cancel">キャンセル</button><button class="button" type="submit">登録内容を確認</button></div>
@@ -94,6 +111,7 @@
       </form>
     </main>
     <template id="product-template"><article class="product-card"><div class="product-head"><h3>商品</h3><button class="button button--danger remove-product" type="button">削除</button></div><div class="grid grid--three"><label>5桁管理番号<input name="product-number" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" /></label><label>枝番<input name="branch-number" type="text" /></label><label>管理番号＋枝番<input name="combined-number" type="text" readonly /></label><label>商品名<input name="product-name" type="text" /></label><label>色<input name="color" type="text" /></label><label>サイズ<input name="size" type="text" /></label><label>個数<input name="quantity" type="number" min="1" value="1" /></label><label class="full">商品ごとの作業状態<div class="check-list"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="持ち込み" />持ち込み</label></div></label></div></article></template>
+    <div class="image-modal" id="image-modal" hidden role="dialog" aria-modal="true" aria-label="伝票写真の拡大表示"><button class="modal-close" type="button" id="close-image-modal" aria-label="拡大表示を閉じる">×</button><img id="modal-image" alt="添付した伝票写真の拡大表示" /></div>
     <script>
       const productList = document.querySelector('#product-list');
       const productTemplate = document.querySelector('#product-template');
@@ -114,6 +132,58 @@
         document.querySelector('#no-detail').hidden = selected.includes('刺繍') || selected.includes('プリント') || selected.includes('裾上げ');
       };
       document.querySelector('#work-types').addEventListener('change', updateDetails);
+      const imageModal = document.querySelector('#image-modal');
+      const modalImage = document.querySelector('#modal-image');
+      const closeImageModal = () => { imageModal.hidden = true; };
+      const setupPhotoCollection = (inputId, previewId, listId, photoLabel) => {
+        const input = document.querySelector(inputId);
+        const preview = document.querySelector(previewId);
+        const list = document.querySelector(listId);
+        let photos = [];
+        const render = () => {
+          list.replaceChildren();
+          photos.forEach((photo, index) => {
+            const card = document.createElement('article');
+            card.className = 'photo-card';
+            const previewButton = document.createElement('button');
+            previewButton.className = 'photo-preview-button';
+            previewButton.type = 'button';
+            previewButton.setAttribute('aria-label', `${photoLabel} ${index + 1} を拡大表示`);
+            const image = document.createElement('img');
+            image.src = photo.url;
+            image.alt = `添付した${photoLabel} ${index + 1}`;
+            previewButton.append(image);
+            previewButton.addEventListener('click', () => { modalImage.src = photo.url; imageModal.hidden = false; });
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-photo';
+            removeButton.type = 'button';
+            removeButton.setAttribute('aria-label', `${photoLabel} ${index + 1} を削除`);
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', () => {
+              URL.revokeObjectURL(photo.url);
+              photos = photos.filter((item) => item.id !== photo.id);
+              closeImageModal();
+              render();
+            });
+            const number = document.createElement('p');
+            number.className = 'photo-number';
+            number.textContent = `${photoLabel} ${index + 1}`;
+            card.append(previewButton, removeButton, number);
+            list.append(card);
+          });
+          preview.hidden = photos.length === 0;
+        };
+        input.addEventListener('change', () => {
+          [...input.files].forEach((file) => photos.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
+          input.value = '';
+          render();
+        });
+      };
+      setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
+      setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
+      document.querySelector('#close-image-modal').addEventListener('click', closeImageModal);
+      imageModal.addEventListener('click', (event) => { if (event.target === imageModal) closeImageModal(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeImageModal(); });
       document.querySelector('#entry-form').addEventListener('submit', (event) => {
         event.preventDefault();
         document.querySelector('#form-status').textContent = '登録処理は次の実装で追加します。現在は入力画面のみです。';
