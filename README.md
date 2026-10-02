@@ -17,9 +17,33 @@ Node.jsがインストールされた環境で、次のコマンドを実行し�
 npm start
 ```
 
-ブラウザで `http://127.0.0.1:3000` を開くと、`Hello World` が表示されます。
+ブラウザで `http://127.0.0.1:3000` を開くと、ワークマンアプリが表示されます。
 
-現時点ではNode.js標準機能だけを使っており、追加のバックエンド用アプリやパッケージの導入は不要です。
+WebアプリはNode.jsで動作します。PostgreSQLへ移行するための `pg` パッケージも導入済みです。
+
+## Web・DBの個別管理
+
+WebサーバーとPostgreSQL DBは、それぞれ別のプロセス・ポートで管理します。
+
+| 対象 | IP・ポート | 起動対象 |
+| --- | --- | --- |
+| Webアプリ | `127.0.0.1:3000` | Node.js (`server.mjs`) |
+| PostgreSQL DB | `127.0.0.1:5432` | Windowsサービス `postgresql-x64-18` |
+
+個別管理用EXEは [WorkmanServiceControlV3.exe](tools/WorkmanServiceControlV2/publish/WorkmanServiceControlV3.exe) です。
+
+- 起動時に管理者権限を許可します。
+- Web／DBを別々に起動・停止できます。
+- 各サービスのIP・ポート・状態を表示します。
+- PostgreSQLの停止中は、WebアプリのDB処理は利用できません。
+
+## PostgreSQL
+
+- アプリ用データベース: `workman_app`
+- アプリ用ロール: `workman_app`
+- スキーマ: `scripts/postgres-schema.sql`
+- SQLiteからの移行スクリプト: `scripts/migrate-sqlite-to-postgres.mjs`
+- 既存の `data/workman-prototype.sqlite` は、移行後もバックアップとして保持します。
 
 ## サービス管理EXE
 
@@ -32,9 +56,8 @@ npm start
 - Webアプリの起動にはNode.jsが必要です。
 - このビルド済みEXEの実行には .NET 9 Desktop Runtime が必要です（開発PCには導入済み）。
 
-## プロトタイプ用データベース・管理画面
+## プロトタイプ用管理画面
 
-- SQLiteデータベースは `data/workman-prototype.sqlite` に作成されます。
 - Webサーバー起動後、管理画面は `http://127.0.0.1:3000/admin` で開けます。
 - 初期管理者IDは `admin`、パスワードは `software` です。
 - 管理画面では、DBの保存先、登録件数、登録済みデータを確認できます。
