@@ -129,6 +129,23 @@ const servePage = async (response, filename) => {
   }
 };
 
+const serveUpload = async (response, pathname) => {
+  const relativePath = pathname.replace(/^\//, '');
+  const uploadsRoot = join(dataDirectory, 'uploads');
+  const filePath = join(dataDirectory, relativePath);
+  if (!filePath.startsWith(uploadsRoot)) {
+    response.writeHead(404); response.end(); return;
+  }
+  try {
+    const file = await readFile(filePath);
+    const contentType = filePath.match(/\.(png)$/i) ? 'image/png' : filePath.match(/\.(gif)$/i) ? 'image/gif' : 'image/jpeg';
+    response.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'private, max-age=3600' });
+    response.end(file);
+  } catch {
+    response.writeHead(404); response.end();
+  }
+};
+
 const savePhotos = (requestId, photoType, photos = []) => {
   const uploadDirectory = join(dataDirectory, 'uploads', String(requestId));
   mkdirSync(uploadDirectory, { recursive: true });
@@ -165,6 +182,20 @@ const createRequest = (payload) => {
   }
 };
 
+const updateRequest = (requestId, payload) => {
+  const customerName = String(payload.customerName ?? '').trim(); const confirmationStatus = String(payload.confirmationStatus ?? '').trim();
+  if (!customerName || !confirmationStatus) throw new Error('お客様名と確認状態は必須です。');
+  database.exec('BEGIN');
+  try {
+    database.prepare('UPDATE requests SET customer_name = ?, confirmation_status = ? WHERE id = ?').run(customerName, confirmationStatus, requestId);
+    database.prepare('UPDATE request_details SET received_date=?, staff=?, customer_kana=?, phone=?, work_types_json=?, amount=?, accounts_receivable=?, deposit=?, notes=? WHERE request_id=?').run(payload.receivedDate ?? null, payload.staff ?? null, payload.customerKana ?? null, payload.phone ?? null, JSON.stringify(payload.workTypes ?? []), payload.amount ?? null, payload.accountsReceivable ?? null, payload.deposit ?? null, payload.notes ?? null, requestId);
+    database.prepare('DELETE FROM request_products WHERE request_id = ?').run(requestId);
+    const add = database.prepare('INSERT INTO request_products (request_id, combined_number, product_name, notes) VALUES (?, ?, ?, ?)');
+    (payload.products ?? []).forEach((product) => add.run(requestId, product.combined ?? null, product.name ?? null, product.notes ?? null));
+    database.exec('COMMIT'); return { requestId };
+  } catch (error) { database.exec('ROLLBACK'); throw error; }
+};
+
 const server = createServer(async (request, response) => {
   const requestUrl = new URL(request.url ?? '/', `http://${host}`);
   const pathname = requestUrl.pathname.replace(/\/$/, '') || '/';
@@ -172,8 +203,10 @@ const server = createServer(async (request, response) => {
   try {
     if (request.method === 'GET' && pathname === '/') return servePage(response, 'index.html');
     if (request.method === 'GET' && pathname === '/new') return servePage(response, 'new-entry.html');
-    if (request.method === 'GET' && pathname === '/search') return servePage(response, 'search.html');
+    if (request.method === 'GET' && pathname === '/search') return servePage(response, 'search-edit.html');
+    if (request.method === 'GET' && pathname === '/edit') return servePage(response, 'edit.html');
     if (request.method === 'GET' && pathname === '/admin') return servePage(response, 'admin.html');
+    if (request.method === 'GET' && pathname.startsWith('/uploads/')) return serveUpload(response, pathname);
 
     if (request.method === 'POST' && pathname === '/api/admin/login') {
       const { username, password } = await readJsonBody(request);
@@ -193,9 +226,19 @@ const server = createServer(async (request, response) => {
 
     if (request.method === 'GET' && pathname === '/api/requests') {
       const query = `%${(requestUrl.searchParams.get('q') ?? '').trim()}%`;
-      const rows = database.prepare(`SELECT r.id, d.app_number, r.customer_name, d.customer_kana, d.phone, r.confirmation_status, r.created_at FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.customer_name LIKE ? OR d.customer_kana LIKE ? OR d.phone LIKE ? OR d.app_number LIKE ? ORDER BY r.id DESC LIMIT 100`).all(query, query, query, query);
+      const rows = database.prepare(`SELECT r.id, d.app_number, r.customer_name, d.customer_kana, d.phone, d.staff, d.received_date, d.registered_date, d.work_types_json, d.amount, d.deposit, r.confirmation_status, r.created_at, (SELECT group_concat(trim(coalesce(combined_number, '') || ' ' || coalesce(product_name, '')), ' / ') FROM request_products product WHERE product.request_id = r.id) AS product_details, (SELECT file_path FROM request_photos p WHERE p.request_id = r.id AND p.photo_type = 'slip' ORDER BY p.id LIMIT 1) AS thumbnail_path FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.customer_name LIKE ? OR d.customer_kana LIKE ? OR d.phone LIKE ? OR d.app_number LIKE ? ORDER BY r.id DESC LIMIT 100`).all(query, query, query, query);
       return sendJson(response, 200, { rows });
     }
+
+    const requestMatch = pathname.match(/^\/api\/requests\/(\d+)$/);
+    if (requestMatch && request.method === 'GET') {
+      const requestId = Number(requestMatch[1]);
+      const requestRow = database.prepare('SELECT r.id, r.customer_name, r.confirmation_status, d.* FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.id = ?').get(requestId);
+      if (!requestRow) return sendJson(response, 404, { error: 'データが見つかりません。' });
+      const products = database.prepare('SELECT combined_number, product_name, notes FROM request_products WHERE request_id = ?').all(requestId);
+      return sendJson(response, 200, { request: requestRow, products });
+    }
+    if (requestMatch && request.method === 'PUT') return sendJson(response, 200, updateRequest(Number(requestMatch[1]), await readJsonBody(request)));
 
     if (request.method === 'POST' && pathname === '/api/admin/logout') {
       const cookies = Object.fromEntries((request.headers.cookie ?? '').split(';').map((item) => {
