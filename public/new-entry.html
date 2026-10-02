@@ -80,11 +80,11 @@
           <div class="grid">
             <label>アプリ内番号<input name="request-id" type="text" placeholder="登録時に自動採番" readonly /></label>
             <label>アプリ登録日<input name="registered-date" type="date" /></label>
-            <label class="required">受付日<input name="received-date" type="date" required /></label>
+            <label>受付日<input name="received-date" type="date" /></label>
             <label>受付担当者<select id="staff" name="staff"><option>指定なし</option><option>店長（イシダ）</option><option>クロダ</option><option>モリオカ</option><option>サカイ</option><option>マツモト（淳史）</option><option>フカヤマ</option><option>マツモト（香織）</option><option>ヤマオカ</option><option>ナカジマ</option><option>ホンダ</option><option>マツモト（慎也）</option><option>ヒロセ</option><option>ヤラ</option><option>ハセ</option><option>アベ</option><option>その他</option></select><span class="inline-add" id="staff-add-controls" hidden><input id="new-staff" type="text" placeholder="担当者名を追加" aria-label="追加する担当者名" /><button id="add-staff" type="button">追加</button></span></label>
             <label class="required">お客様名<input name="customer-name" type="text" required /></label>
             <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
-            <label class="required">電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" required /></label>
+            <label>電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" /></label>
             <label>伝票写真<input id="slip-photo" name="slip-photo" type="file" accept="image/*" capture="environment" multiple /></label>
             <div class="full photo-preview" id="slip-preview" hidden><p class="photo-preview-label">添付した伝票写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="slip-preview-list"></div></div>
             <div class="full"><span class="field-label">作業内容</span><div class="check-list" id="work-types"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="予約" />予約</label><label><input type="checkbox" value="見積" />見積</label><label><input type="checkbox" value="その他" />その他</label></div></div>
@@ -111,7 +111,7 @@
             <label>注文金額<input name="amount" type="number" min="0" inputmode="numeric" /></label>
             <div class="choice-group"><span class="field-label">売掛金あり／なし</span><input name="accounts-receivable" type="hidden" value="" /><div class="choice-buttons" data-choice="accounts-receivable"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
             <div class="choice-group"><span class="field-label">内金あり／なし</span><input name="deposit" type="hidden" value="" /><div class="choice-buttons" data-choice="deposit"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
-            <div class="choice-group"><span class="field-label">確認状態</span><input name="confirmation" type="hidden" value="" /><div class="choice-buttons" data-choice="confirmation"><button class="choice-button" type="button" data-value="登録済み">登録済み</button><button class="choice-button" type="button" data-value="要確認">要確認</button></div></div>
+            <div class="choice-group"><span class="field-label required">確認状態</span><input name="confirmation" type="hidden" value="" /><div class="choice-buttons" data-choice="confirmation"><button class="choice-button" type="button" data-value="登録済み">登録済み</button><button class="choice-button" type="button" data-value="要確認">要確認</button></div></div>
             <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
             <label class="full">完成写真<input id="completed-photo" name="completed-photo" type="file" accept="image/*" capture="environment" multiple /></label>
             <div class="full photo-preview" id="completed-preview" hidden><p class="photo-preview-label">添付した完成写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="completed-preview-list"></div></div>
@@ -258,6 +258,11 @@
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeImageModal(); });
       document.querySelector('#entry-form').addEventListener('submit', (event) => {
         event.preventDefault();
+        if (!document.querySelector('[name="confirmation"]').value) {
+          document.querySelector('#form-status').textContent = '確認状態を選択してください。';
+          document.querySelector('[data-choice="confirmation"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
         document.querySelector('#form-status').textContent = '登録処理は次の実装で追加します。現在は入力画面のみです。';
       });
       const today = new Date().toISOString().slice(0, 10);
