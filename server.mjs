@@ -116,7 +116,10 @@ const requireAdmin = (request, response) => {
 
 const servePage = async (response, filename) => {
   try {
-    const page = await readFile(join(projectRoot, 'public', filename));
+    let page = await readFile(join(projectRoot, 'public', filename), 'utf8');
+    if (filename === 'edit.html') {
+      page = page.replace('<input name="staff">', '<select name="staff"><option>指定なし</option><option>店長（イシダ）</option><option>クロダ</option><option>モリオカ</option><option>サカイ</option><option>マツモト（淳史）</option><option>フカヤマ</option><option>マツモト（香織）</option><option>ヤマオカ</option><option>ナカジマ</option><option>ホンダ</option><option>マツモト（慎也）</option><option>ヒロセ</option><option>ヤラ</option><option>ハセ</option><option>アベ</option><option>その他</option></select>');
+    }
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
       'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:;"
