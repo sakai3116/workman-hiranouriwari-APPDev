@@ -55,6 +55,9 @@
     </main>
     <script>
       const status = document.querySelector('#status');
+      if (new URLSearchParams(window.location.search).has('registered')) {
+        status.textContent = '登録が完了しました。';
+      }
       document.querySelectorAll('[data-route]').forEach((button) => {
         button.addEventListener('click', () => {
           window.location.href = button.dataset.route;

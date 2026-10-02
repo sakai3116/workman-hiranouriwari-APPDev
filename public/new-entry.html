@@ -263,7 +263,8 @@
           document.querySelector('[data-choice="confirmation"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
-        document.querySelector('#form-status').textContent = '登録処理は次の実装で追加します。現在は入力画面のみです。';
+        document.querySelector('#form-status').textContent = '登録が完了しました。タイトル画面へ戻ります。';
+        window.setTimeout(() => { window.location.href = '/?registered=1'; }, 500);
       });
       const today = new Date().toISOString().slice(0, 10);
       document.querySelector('[name="registered-date"]').value = today;
