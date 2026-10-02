@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理画面 | ワークマンアプリ</title>
+    <style>
+      :root { --yellow: #f2aa20; --cream: #fff4d8; --line: #e7d7b5; --text: #172433; --muted: #617082; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px clamp(20px, 5vw, 72px); background: var(--yellow); }
+      h1 { margin: 0; font-size: 1.4rem; } main { width: min(900px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0; }
+      .card { margin-bottom: 18px; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+      h2 { margin-top: 0; font-size: 1.1rem; } label { display: block; margin-top: 14px; font-weight: 700; font-size: .9rem; }
+      input { width: 100%; margin-top: 6px; padding: 11px; border: 1px solid #bfcbd6; border-radius: 7px; font: inherit; }
+      button { min-height: 44px; padding: 9px 16px; border: 1px solid #d9910c; border-radius: 8px; background: var(--yellow); color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+      button.secondary { border-color: #b9a77c; background: #fff; } .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+      .notice { min-height: 22px; margin: 16px 0 0; padding: 10px; border-radius: 7px; background: var(--cream); color: #634a14; }
+      table { width: 100%; border-collapse: collapse; font-size: .9rem; } th, td { padding: 10px; border-bottom: 1px solid #e4e8ec; text-align: left; } th { background: #fffcf5; }
+      [hidden] { display: none !important; } .muted { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header><h1>ワークマンアプリ 管理画面</h1><a href="/">アプリへ戻る</a></header>
+    <main>
+      <section class="card" id="login-card"><h2>管理者ログイン</h2><form id="login-form"><label>ID<input name="username" value="admin" autocomplete="username" required /></label><label>パスワード<input name="password" type="password" autocomplete="current-password" required /></label><div class="actions"><button type="submit">ログイン</button></div></form><p class="notice" id="login-notice">管理画面にアクセスするにはログインしてください。</p></section>
+      <section class="card" id="dashboard" hidden><h2>データベースの状態</h2><p id="database-status" class="muted">読み込み中です。</p><div class="actions"><button class="secondary" id="reload" type="button">再読み込み</button><button class="secondary" id="logout" type="button">ログアウト</button></div></section>
+      <section class="card" id="request-card" hidden><h2>登録データ</h2><div id="request-list" class="muted">読み込み中です。</div></section>
+    </main>
+    <script>
+      const loginCard = document.querySelector('#login-card'); const dashboard = document.querySelector('#dashboard'); const requestCard = document.querySelector('#request-card');
+      const notice = document.querySelector('#login-notice');
+      const loadDashboard = async () => {
+        const [statusResponse, requestsResponse] = await Promise.all([fetch('/api/admin/status'), fetch('/api/admin/requests')]);
+        if (!statusResponse.ok || !requestsResponse.ok) { dashboard.hidden = true; requestCard.hidden = true; loginCard.hidden = false; return; }
+        const status = await statusResponse.json(); const { rows } = await requestsResponse.json();
+        loginCard.hidden = true; dashboard.hidden = false; requestCard.hidden = false;
+        document.querySelector('#database-status').textContent = `DBファイル: ${status.databasePath} / 登録件数: ${status.requestCount}件`;
+        document.querySelector('#request-list').replaceChildren(rows.length ? createTable(rows) : document.createTextNode('登録データはまだありません。'));
+      };
+      const createTable = (rows) => { const table = document.createElement('table'); table.innerHTML = '<thead><tr><th>ID</th><th>お客様名</th><th>確認状態</th><th>登録日時</th></tr></thead>'; const body = document.createElement('tbody'); rows.forEach((row) => { const tr = document.createElement('tr'); [row.id, row.customer_name ?? '', row.confirmation_status ?? '', row.created_at].forEach((value) => { const td = document.createElement('td'); td.textContent = value; tr.append(td); }); body.append(tr); }); table.append(body); return table; };
+      document.querySelector('#login-form').addEventListener('submit', async (event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const response = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(form)) }); if (!response.ok) { const data = await response.json(); notice.textContent = data.error; return; } await loadDashboard(); });
+      document.querySelector('#reload').addEventListener('click', loadDashboard);
+      document.querySelector('#logout').addEventListener('click', async () => { await fetch('/api/admin/logout', { method: 'POST' }); dashboard.hidden = true; requestCard.hidden = true; loginCard.hidden = false; notice.textContent = 'ログアウトしました。'; });
+      loadDashboard();
+    </script>
+  </body>
+</html>
