@@ -114,11 +114,21 @@ const requireAdmin = (request, response) => {
   return session;
 };
 
-const servePage = async (response, filename) => {
+const servePage = async (response, filename, editMode = false) => {
   try {
     let page = await readFile(join(projectRoot, 'public', filename), 'utf8');
     if (filename === 'edit.html') {
       page = page.replace('<input name="staff">', '<select name="staff"><option>指定なし</option><option>店長（イシダ）</option><option>クロダ</option><option>モリオカ</option><option>サカイ</option><option>マツモト（淳史）</option><option>フカヤマ</option><option>マツモト（香織）</option><option>ヤマオカ</option><option>ナカジマ</option><option>ホンダ</option><option>マツモト（慎也）</option><option>ヒロセ</option><option>ヤラ</option><option>ハセ</option><option>アベ</option><option>その他</option></select>');
+    }
+    if (editMode) {
+      page = page.replace('</body>', `<script>
+const editId=new URLSearchParams(location.search).get('id');
+document.querySelector('.app-header h1')?.replaceChildren('受付情報を編集');
+document.querySelector('#entry-form button[type="submit"]').textContent='更新を保存';
+const setValue=(name,value)=>{const input=document.querySelector('[name="'+name+'"]');if(input)input.value=value??''};
+fetch('/api/requests/'+editId).then(response=>response.json()).then(data=>{const r=data.request;setValue('request-id',r.app_number);setValue('registered-date',r.registered_date);setValue('received-date',r.received_date);setValue('staff',r.staff);setValue('customer-name',r.customer_name);setValue('customer-kana',r.customer_kana);setValue('phone',r.phone);setValue('other-work',r.other_work);setValue('position',r.position);setValue('thread-font',r.thread_font);setValue('embroidery-content',r.embroidery_content);setValue('hemming-method',r.hemming_method);setValue('length',r.length_cm);setValue('hemming-thread',r.hemming_thread);setValue('remaining-fabric',r.remaining_fabric);setValue('hemming-notes',r.hemming_notes);setValue('amount',r.amount);setValue('notes',r.notes);['accounts-receivable','deposit','confirmation'].forEach(name=>{const value=name==='confirmation'?r.confirmation_status:r[name.replace(/-([a-z])/g,(_,c)=>'_'+c)];const input=document.querySelector('[name="'+name+'"]');if(input){input.value=value??'';document.querySelectorAll('[data-choice="'+name+'"] .choice-button').forEach(button=>button.classList.toggle('is-selected',button.dataset.value===value))}});let types=[];try{types=JSON.parse(r.work_types_json)}catch{};document.querySelectorAll('#work-types input').forEach(input=>{input.checked=types.includes(input.value);input.dispatchEvent(new Event('change',{bubbles:true}))});(data.products||[]).forEach((p,index)=>{if(index>0)document.querySelector('#add-product').click();const card=document.querySelectorAll('.product-card')[index];if(card){card.querySelector('[name="combined-number"]').value=p.combined_number??'';card.querySelector('[name="product-name"]').value=p.product_name??'';card.querySelector('[name="product-notes"]').value=p.notes??''}})});
+document.querySelector('#entry-form').addEventListener('submit',async event=>{event.preventDefault();event.stopImmediatePropagation();const value=name=>document.querySelector('[name="'+name+'"]').value;const payload={customerName:value('customer-name'),confirmationStatus:value('confirmation'),receivedDate:value('received-date'),staff:value('staff'),customerKana:value('customer-kana'),phone:value('phone'),workTypes:[...document.querySelectorAll('#work-types input:checked')].map(i=>i.value),amount:value('amount'),accountsReceivable:value('accounts-receivable'),deposit:value('deposit'),notes:value('notes'),products:[...document.querySelectorAll('.product-card')].map(card=>({combined:card.querySelector('[name="combined-number"]').value,name:card.querySelector('[name="product-name"]').value,notes:card.querySelector('[name="product-notes"]').value}))};const result=await fetch('/api/requests/'+editId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(result.ok){document.querySelector('#form-status').textContent='更新しました。検索画面へ戻ります。';setTimeout(()=>location.href='/search',500)}} ,true);
+</script></body>`);
     }
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
@@ -207,7 +217,7 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && pathname === '/') return servePage(response, 'index.html');
     if (request.method === 'GET' && pathname === '/new') return servePage(response, 'new-entry.html');
     if (request.method === 'GET' && pathname === '/search') return servePage(response, 'search-edit.html');
-    if (request.method === 'GET' && pathname === '/edit') return servePage(response, 'edit.html');
+    if (request.method === 'GET' && pathname === '/edit') return servePage(response, 'new-entry.html', true);
     if (request.method === 'GET' && pathname === '/admin') return servePage(response, 'admin.html');
     if (request.method === 'GET' && pathname.startsWith('/uploads/')) return serveUpload(response, pathname);
 
