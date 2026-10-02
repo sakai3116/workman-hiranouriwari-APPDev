@@ -121,7 +121,7 @@
         <p class="form-status" id="form-status" aria-live="polite">入力内容はまだ保存されません。</p>
       </form>
     </main>
-    <template id="product-template"><article class="product-card"><div class="product-head"><h3>商品</h3><button class="button button--danger remove-product" type="button">削除</button></div><div class="grid grid--three"><label>5桁管理番号<input name="product-number" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" /></label><label>枝番<input name="branch-number" type="text" /></label><label>管理番号＋枝番<input name="combined-number" type="text" readonly /></label><label>商品名<input name="product-name" type="text" /></label><label>色<input name="color" type="text" /></label><label>サイズ<input name="size" type="text" /></label><label>個数<input name="quantity" type="number" min="1" value="1" /></label><label class="full">商品ごとの作業状態<div class="check-list"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="持ち込み" />持ち込み</label></div></label></div></article></template>
+    <template id="product-template"><article class="product-card"><div class="product-head"><h3>商品</h3><button class="button button--danger remove-product" type="button">削除</button></div><div class="grid grid--three"><label>5桁管理番号<input name="product-number" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" /></label><label>枝番<input name="branch-number" type="text" /></label><label>管理番号＋枝番<input name="combined-number" type="text" readonly /></label><label>商品名<input name="product-name" type="text" /></label><label>色<input name="color" type="text" /></label><label>サイズ<input name="size" type="text" /></label><label>個数<input name="quantity" type="number" min="1" value="1" /></label><label class="full">商品ごとの作業状態<div class="check-list"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="持ち込み" />持ち込み</label></div></label><label class="full">商品備考<textarea name="product-notes" placeholder="商品ごとの注意事項・補足を入力"></textarea></label></div></article></template>
     <div class="image-modal" id="image-modal" hidden role="dialog" aria-modal="true" aria-label="伝票写真の拡大表示"><button class="modal-close" type="button" id="close-image-modal" aria-label="拡大表示を閉じる">×</button><img id="modal-image" alt="添付した伝票写真の拡大表示" /></div>
     <script>
       const productList = document.querySelector('#product-list');
@@ -129,6 +129,16 @@
       const addProduct = () => {
         const product = productTemplate.content.cloneNode(true);
         product.querySelector('.remove-product').addEventListener('click', (event) => event.target.closest('.product-card').remove());
+        const productNumber = product.querySelector('[name="product-number"]');
+        const branchNumber = product.querySelector('[name="branch-number"]');
+        const combinedNumber = product.querySelector('[name="combined-number"]');
+        const updateCombinedNumber = () => {
+          const number = productNumber.value.trim();
+          const branch = branchNumber.value.trim();
+          combinedNumber.value = number && branch ? `${number}-${branch}` : '';
+        };
+        productNumber.addEventListener('input', updateCombinedNumber);
+        branchNumber.addEventListener('input', updateCombinedNumber);
         productList.append(product);
       };
       document.querySelector('#add-product').addEventListener('click', addProduct);
