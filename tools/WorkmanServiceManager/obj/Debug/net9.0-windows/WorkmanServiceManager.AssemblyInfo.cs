@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WorkmanServiceManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d25247084a0cefac656e12b56fcc2c1da9e9b12c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e1071b3758caa19bc9158769a3e31c2b2a816265")]
 [assembly: System.Reflection.AssemblyProductAttribute("WorkmanServiceManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WorkmanServiceManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
