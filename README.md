@@ -9,6 +9,60 @@
 - スマートフォン、タブレット、PCから、VPN経由でそのマシンへアクセスする。
 - データベースはサーバー側だけに置き、クライアントから直接アクセスできない構成にする（ECサイトのような構成）。
 
+## ローカル起動（最小Webアプリ）
+
+Node.jsがインストールされた環境で、次のコマンドを実行します。
+
+```sh
+npm start
+```
+
+ブラウザで `http://127.0.0.1:3000` を開くと、ワークマンアプリが表示されます。
+
+WebアプリはNode.jsで動作します。PostgreSQLへ移行するための `pg` パッケージも導入済みです。
+
+## Web・DBの個別管理
+
+WebサーバーとPostgreSQL DBは、それぞれ別のプロセス・ポートで管理します。
+
+| 対象 | IP・ポート | 起動対象 |
+| --- | --- | --- |
+| Webアプリ | `127.0.0.1:3000` | Node.js (`server.mjs`) |
+| PostgreSQL DB | `127.0.0.1:5432` | Windowsサービス `postgresql-x64-18` |
+
+個別管理用EXEは [WorkmanServiceControlV3.exe](tools/WorkmanServiceControlV2/publish/WorkmanServiceControlV3.exe) です。
+
+- 起動時に管理者権限を許可します。
+- Web／DBを別々に起動・停止できます。
+- 各サービスのIP・ポート・状態を表示します。
+- PostgreSQLの停止中は、WebアプリのDB処理は利用できません。
+
+## PostgreSQL
+
+- アプリ用データベース: `workman_app`
+- アプリ用ロール: `workman_app`
+- スキーマ: `scripts/postgres-schema.sql`
+- SQLiteからの移行スクリプト: `scripts/migrate-sqlite-to-postgres.mjs`
+- 既存の `data/workman-prototype.sqlite` は、移行後もバックアップとして保持します。
+
+## サービス管理EXE
+
+`tools/WorkmanServiceManager` に、ローカルWebサーバーを起動・状態確認するWindows用管理アプリのソースがあります。ビルド済みEXEは `tools/WorkmanServiceManager/publish/WorkmanServiceManager.exe` です。
+
+- ビルド済みの `WorkmanServiceManager.exe` を起動すると、サーバーが稼働中か確認できます。
+- 停止中の場合は「サーバーを起動」を押すと、プロジェクト内の `server.mjs` を起動します。
+- 「サーバーを停止」は、ポート3000で稼働しているNode.jsのWebサーバーを確認ダイアログ後に停止します。
+- このEXEはPC起動時の自動起動を設定するものではありません。PC起動後に手動で起動してください。
+- Webアプリの起動にはNode.jsが必要です。
+- このビルド済みEXEの実行には .NET 9 Desktop Runtime が必要です（開発PCには導入済み）。
+
+## プロトタイプ用管理画面
+
+- Webサーバー起動後、管理画面は `http://127.0.0.1:3000/admin` で開けます。
+- 初期管理者IDは `admin`、パスワードは `software` です。
+- 管理画面では、DBの保存先、登録件数、登録済みデータを確認できます。
+- この認証はローカルプロトタイプ用です。本番運用前にはパスワード変更、HTTPS、利用者ごとのアカウント管理を実装します。
+
 ## 画面
 
 ### タイトル画面

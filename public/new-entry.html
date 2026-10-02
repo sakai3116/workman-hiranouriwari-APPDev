@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新規追加 | ワークマンアプリ</title>
+    <style>
+      :root { --yellow: #f2aa20; --yellow-dark: #d9910c; --cream: #fff4d8; --line: #e7d7b5; --text: #172433; --muted: #617082; --white: #fff; --danger: #a93636; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: #f4f7fa; color: var(--text); font-family: "Yu Gothic UI", "Meiryo", sans-serif; }
+      .app-header { display: flex; align-items: center; gap: 14px; padding: 16px clamp(16px, 5vw, 72px); background: var(--yellow); }
+      .back-button { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #805e16; border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; font-size: 1.45rem; }
+      .back-button:hover { background: rgb(255 255 255 / 30%); }
+      .app-header h1 { margin: 0; font-size: clamp(1.2rem, 3vw, 1.55rem); }
+      main { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 30px 0 56px; }
+      .page-note { margin: 0 0 24px; color: var(--muted); font-size: .9rem; }
+      .form-section { margin-top: 18px; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 14px; background: var(--white); box-shadow: 0 2px 8px rgb(82 61 18 / 5%); }
+      .form-section h2 { margin: 0 0 18px; padding-bottom: 12px; border-bottom: 3px solid var(--yellow); font-size: 1.12rem; }
+      .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .full { grid-column: 1 / -1; }
+      label, .field-label { display: block; color: #314152; font-size: .9rem; font-weight: 700; }
+      .required::after { margin-left: 4px; color: var(--danger); content: "必須"; font-size: .72rem; }
+      input, select, textarea { width: 100%; margin-top: 7px; padding: 10px 11px; border: 1px solid #bfcbd6; border-radius: 7px; background: var(--white); color: var(--text); font: inherit; font-size: .95rem; }
+      .inline-add { display: flex; gap: 8px; margin-top: 8px; }
+      .inline-add[hidden] { display: none; }
+      .inline-add input { margin-top: 0; }
+      .inline-add button { min-width: 78px; min-height: 42px; border: 1px solid #b9a77c; border-radius: 7px; background: var(--white); color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+      .inline-add button:hover { background: var(--cream); }
+      textarea { min-height: 90px; resize: vertical; }
+      input:focus, select:focus, textarea:focus { outline: 3px solid #f8d88d; border-color: var(--yellow-dark); }
+      .check-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+      .check-list label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 400; cursor: pointer; }
+      .check-list input { width: auto; margin: 0; accent-color: var(--yellow-dark); }
+      .choice-group { display: block; }
+      .choice-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 7px; }
+      .choice-button { min-height: 50px; border: 1px solid #c9d1d9; border-radius: 3px; background: #f8f9fa; color: #435364; cursor: pointer; font: inherit; font-size: 1rem; font-weight: 700; }
+      .choice-button:hover { border-color: #d7a239; background: #fff7e7; }
+      .choice-button.is-selected { border-color: var(--yellow); background: var(--yellow); color: var(--text); }
+      .choice-button:focus-visible { outline: 3px solid #f8d88d; outline-offset: 2px; }
+      .photo-preview { margin-top: 2px; padding: 12px; border: 2px solid var(--yellow); border-radius: 10px; background: #fffcf5; }
+      .photo-preview[hidden] { display: none; }
+      .photo-preview-label { margin: 0 0 10px; color: #634a14; font-size: .85rem; font-weight: 700; }
+      .photo-preview-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .photo-card { position: relative; min-width: 0; }
+      .photo-preview-button { display: block; width: 100%; padding: 0; border: 0; border-radius: 6px; background: #222; cursor: zoom-in; overflow: hidden; }
+      .photo-preview-button img { display: block; width: 100%; max-height: 260px; object-fit: contain; }
+      .remove-photo { position: absolute; top: 7px; right: 7px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #d9a6a6; border-radius: 8px; background: #fff5f5; color: var(--danger); cursor: pointer; font: inherit; font-size: 1.35rem; line-height: 1; font-weight: 700; box-shadow: 0 1px 4px rgb(0 0 0 / 18%); }
+      .remove-photo:hover { background: #ffe4e4; }
+      .remove-photo:focus-visible { outline: 3px solid #e8a8a8; outline-offset: 2px; }
+      .photo-number { margin: 6px 0 0; color: var(--muted); font-size: .8rem; }
+      .details { display: none; margin-top: 18px; padding: 16px; border-radius: 9px; background: var(--cream); }
+      .details.is-visible { display: block; }
+      .product-card { margin-top: 14px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fffcf5; }
+      .product-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+      .product-head h3 { margin: 0; font-size: 1rem; }
+      .button { padding: 10px 16px; border: 1px solid var(--yellow-dark); border-radius: 8px; background: var(--yellow); color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+      .button:hover { background: var(--yellow-dark); }
+      .button--secondary { border-color: #b9a77c; background: var(--white); }
+      .button--danger { border-color: #d9a6a6; background: #fff5f5; color: var(--danger); font-size: .82rem; }
+      .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+      .form-status { min-height: 22px; margin: 16px 0 0; padding: 10px 12px; border-radius: 7px; background: var(--cream); color: #634a14; font-size: .9rem; }
+      .image-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgb(0 0 0 / 88%); }
+      .image-modal[hidden] { display: none; }
+      .modal-close { position: fixed; top: 20px; left: 20px; width: 46px; height: 46px; border: 0; border-radius: 50%; background: rgb(255 255 255 / 15%); color: var(--white); cursor: pointer; font-size: 2rem; line-height: 1; }
+      .image-modal img { max-width: min(92vw, 900px); max-height: 88vh; object-fit: contain; }
+      @media (max-width: 680px) { .grid, .grid--three { grid-template-columns: 1fr; } main { width: min(100% - 24px, 960px); padding-top: 22px; } .form-section { padding: 18px; } }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <button class="back-button" type="button" id="back-button" aria-label="タイトル画面に戻る">←</button>
+      <h1>新規追加</h1>
+    </header>
+    <main>
+      <p class="page-note">受付内容を入力してください。<span class="required">必須</span>の項目は登録時に確認します。</p>
+      <form id="entry-form">
+        <section class="form-section" aria-labelledby="receipt-heading">
+          <h2 id="receipt-heading">受付情報</h2>
+          <div class="grid">
+            <label>アプリ内番号<input name="request-id" type="text" placeholder="登録時に自動採番" readonly /></label>
+            <label>アプリ登録日<input name="registered-date" type="date" /></label>
+            <label>受付日<input name="received-date" type="date" /></label>
+            <label>受付担当者<select id="staff" name="staff"><option>指定なし</option><option>店長（イシダ）</option><option>クロダ</option><option>モリオカ</option><option>サカイ</option><option>マツモト（淳史）</option><option>フカヤマ</option><option>マツモト（香織）</option><option>ヤマオカ</option><option>ナカジマ</option><option>ホンダ</option><option>マツモト（慎也）</option><option>ヒロセ</option><option>ヤラ</option><option>ハセ</option><option>アベ</option><option>その他</option></select><span class="inline-add" id="staff-add-controls" hidden><input id="new-staff" type="text" placeholder="担当者名を追加" aria-label="追加する担当者名" /><button id="add-staff" type="button">追加</button></span></label>
+            <label class="required">お客様名<input name="customer-name" type="text" required /></label>
+            <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
+            <label>電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" /></label>
+            <label>伝票写真<input id="slip-photo" name="slip-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="full photo-preview" id="slip-preview" hidden><p class="photo-preview-label">添付した伝票写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="slip-preview-list"></div></div>
+            <div class="full"><span class="field-label">作業内容</span><div class="check-list" id="work-types"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="予約" />予約</label><label><input type="checkbox" value="見積" />見積</label><label><input type="checkbox" value="その他" />その他</label></div></div>
+            <label class="full details" id="other-details">その他の作業内容<textarea name="other-work" placeholder="作業内容を入力してください"></textarea></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="product-heading">
+          <h2 id="product-heading">商品情報</h2>
+          <div id="product-list"></div>
+          <button class="button button--secondary" type="button" id="add-product">＋ 商品を追加</button>
+        </section>
+
+        <section class="form-section" aria-labelledby="detail-heading">
+          <h2 id="detail-heading">作業詳細</h2>
+          <div class="details" id="embroidery-details"><div class="grid"><label>刺繍・プリント位置<input name="position" type="text" /></label><label>糸色・書体<input name="thread-font" type="text" /></label><label class="full">刺繍・プリント内容<textarea name="embroidery-content"></textarea></label></div></div>
+          <div class="details" id="hemming-details"><div class="grid grid--three"><label>裾上げ方法<select name="hemming-method"><option value="">選択してください</option><option>総丈</option><option>股下</option><option>裾から何cm</option></select></label><label>長さ（cm）<input name="length" type="number" min="0" step="0.1" /></label><label>裾上げ糸色<input name="hemming-thread" type="text" /></label><label>余り布の有無<select name="remaining-fabric"><option value="">選択してください</option><option>破棄</option><option>お渡し</option><option>その他</option></select></label><label class="full">裾上げ備考<textarea name="hemming-notes"></textarea></label></div></div>
+          <p id="no-detail" class="page-note">刺繍・プリントまたは裾上げを選択すると、詳細入力欄が表示されます。</p>
+        </section>
+
+        <section class="form-section" aria-labelledby="payment-heading">
+          <h2 id="payment-heading">金額・確認</h2>
+          <div class="grid">
+            <label>注文金額<input name="amount" type="number" min="0" inputmode="numeric" /></label>
+            <div class="choice-group"><span class="field-label">売掛金あり／なし</span><input name="accounts-receivable" type="hidden" value="" /><div class="choice-buttons" data-choice="accounts-receivable"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
+            <div class="choice-group"><span class="field-label">内金あり／なし</span><input name="deposit" type="hidden" value="" /><div class="choice-buttons" data-choice="deposit"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
+            <div class="choice-group"><span class="field-label required">確認状態</span><input name="confirmation" type="hidden" value="" /><div class="choice-buttons" data-choice="confirmation"><button class="choice-button" type="button" data-value="登録済み">登録済み</button><button class="choice-button" type="button" data-value="要確認">要確認</button></div></div>
+            <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
+            <label class="full">完成写真<input id="completed-photo" name="completed-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="full photo-preview" id="completed-preview" hidden><p class="photo-preview-label">添付した完成写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="completed-preview-list"></div></div>
+          </div>
+        </section>
+        <div class="actions"><button class="button button--secondary" type="button" id="cancel">キャンセル</button><button class="button" type="submit">登録内容を確認</button></div>
+        <p class="form-status" id="form-status" aria-live="polite">入力内容はまだ保存されません。</p>
+      </form>
+    </main>
+    <template id="product-template"><article class="product-card"><div class="product-head"><h3>商品</h3><button class="button button--danger remove-product" type="button">削除</button></div><div class="grid grid--three"><label>5桁管理番号<input name="product-number" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" /></label><label>枝番<input name="branch-number" type="text" /></label><label>管理番号＋枝番<input name="combined-number" type="text" readonly /></label><label>商品名<input name="product-name" type="text" /></label><label>色<input name="color" type="text" /></label><label>サイズ<input name="size" type="text" /></label><label>個数<input name="quantity" type="number" min="1" value="1" /></label><label class="full">商品ごとの作業状態<div class="check-list"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="持ち込み" />持ち込み</label></div></label><label class="full">商品備考<textarea name="product-notes" placeholder="商品ごとの注意事項・補足を入力"></textarea></label></div></article></template>
+    <div class="image-modal" id="image-modal" hidden role="dialog" aria-modal="true" aria-label="伝票写真の拡大表示"><button class="modal-close" type="button" id="close-image-modal" aria-label="拡大表示を閉じる">×</button><img id="modal-image" alt="添付した伝票写真の拡大表示" /></div>
+    <script>
+      const productList = document.querySelector('#product-list');
+      const productTemplate = document.querySelector('#product-template');
+      const addProduct = () => {
+        const product = productTemplate.content.cloneNode(true);
+        product.querySelector('.remove-product').addEventListener('click', (event) => event.target.closest('.product-card').remove());
+        const productNumber = product.querySelector('[name="product-number"]');
+        const branchNumber = product.querySelector('[name="branch-number"]');
+        const combinedNumber = product.querySelector('[name="combined-number"]');
+        const updateCombinedNumber = () => {
+          const number = productNumber.value.trim();
+          const branch = branchNumber.value.trim();
+          combinedNumber.value = number && branch ? `${number}-${branch}` : '';
+        };
+        productNumber.addEventListener('input', updateCombinedNumber);
+        branchNumber.addEventListener('input', updateCombinedNumber);
+        productList.append(product);
+      };
+      document.querySelector('#add-product').addEventListener('click', addProduct);
+      addProduct();
+      document.querySelector('#back-button').addEventListener('click', () => { window.location.href = '/'; });
+      document.querySelector('#cancel').addEventListener('click', () => { window.location.href = '/'; });
+      const updateDetails = () => {
+        const selected = [...document.querySelectorAll('#work-types input:checked')].map((input) => input.value);
+        document.querySelector('#other-details').classList.toggle('is-visible', selected.includes('その他'));
+        document.querySelector('#embroidery-details').classList.toggle('is-visible', selected.includes('刺繍') || selected.includes('プリント'));
+        document.querySelector('#hemming-details').classList.toggle('is-visible', selected.includes('裾上げ'));
+        document.querySelector('#no-detail').hidden = selected.includes('刺繍') || selected.includes('プリント') || selected.includes('裾上げ');
+      };
+      document.querySelector('#work-types').addEventListener('change', updateDetails);
+      document.querySelectorAll('[data-choice]').forEach((choiceButtons) => {
+        const input = document.querySelector(`[name="${choiceButtons.dataset.choice}"]`);
+        choiceButtons.querySelectorAll('.choice-button').forEach((button) => {
+          button.addEventListener('click', () => {
+            const isAlreadySelected = button.classList.contains('is-selected');
+            input.value = isAlreadySelected ? '' : button.dataset.value;
+            choiceButtons.querySelectorAll('.choice-button').forEach((item) => item.classList.toggle('is-selected', !isAlreadySelected && item === button));
+          });
+        });
+      });
+      const staffSelect = document.querySelector('#staff');
+      const newStaffInput = document.querySelector('#new-staff');
+      const staffAddControls = document.querySelector('#staff-add-controls');
+      const customStaffStorageKey = 'workman-app-custom-staff';
+      const updateStaffAddControls = () => {
+        const isOther = staffSelect.value === 'その他';
+        staffAddControls.hidden = !isOther;
+        if (!isOther) newStaffInput.value = '';
+      };
+      const addStaffOption = (name, select = false) => {
+        const normalizedName = name.trim();
+        if (!normalizedName) return;
+        const existing = [...staffSelect.options].find((option) => option.value === normalizedName);
+        if (existing) { if (select) staffSelect.value = normalizedName; return; }
+        let customGroup = staffSelect.querySelector('optgroup');
+        if (!customGroup) {
+          customGroup = document.createElement('optgroup');
+          customGroup.label = '追加した担当者';
+          staffSelect.append(customGroup);
+        }
+        const option = new Option(normalizedName, normalizedName);
+        customGroup.append(option);
+        if (select) staffSelect.value = normalizedName;
+      };
+      try {
+        JSON.parse(localStorage.getItem(customStaffStorageKey) ?? '[]').forEach((name) => addStaffOption(String(name)));
+      } catch { localStorage.removeItem(customStaffStorageKey); }
+      staffSelect.addEventListener('change', updateStaffAddControls);
+      updateStaffAddControls();
+      document.querySelector('#add-staff').addEventListener('click', () => {
+        const name = newStaffInput.value.trim();
+        if (!name) { newStaffInput.focus(); return; }
+        const savedNames = JSON.parse(localStorage.getItem(customStaffStorageKey) ?? '[]');
+        if (!savedNames.includes(name)) {
+          savedNames.push(name);
+          localStorage.setItem(customStaffStorageKey, JSON.stringify(savedNames));
+        }
+        addStaffOption(name, true);
+        newStaffInput.value = '';
+        updateStaffAddControls();
+      });
+      const imageModal = document.querySelector('#image-modal');
+      const modalImage = document.querySelector('#modal-image');
+      const closeImageModal = () => { imageModal.hidden = true; };
+      const setupPhotoCollection = (inputId, previewId, listId, photoLabel) => {
+        const input = document.querySelector(inputId);
+        const preview = document.querySelector(previewId);
+        const list = document.querySelector(listId);
+        let photos = [];
+        const render = () => {
+          list.replaceChildren();
+          photos.forEach((photo, index) => {
+            const card = document.createElement('article');
+            card.className = 'photo-card';
+            const previewButton = document.createElement('button');
+            previewButton.className = 'photo-preview-button';
+            previewButton.type = 'button';
+            previewButton.setAttribute('aria-label', `${photoLabel} ${index + 1} を拡大表示`);
+            const image = document.createElement('img');
+            image.src = photo.url;
+            image.alt = `添付した${photoLabel} ${index + 1}`;
+            previewButton.append(image);
+            previewButton.addEventListener('click', () => { modalImage.src = photo.url; imageModal.hidden = false; });
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-photo';
+            removeButton.type = 'button';
+            removeButton.setAttribute('aria-label', `${photoLabel} ${index + 1} を削除`);
+            removeButton.textContent = '×';
+            removeButton.addEventListener('click', () => {
+              URL.revokeObjectURL(photo.url);
+              photos = photos.filter((item) => item.id !== photo.id);
+              closeImageModal();
+              render();
+            });
+            const number = document.createElement('p');
+            number.className = 'photo-number';
+            number.textContent = `${photoLabel} ${index + 1}`;
+            card.append(previewButton, removeButton, number);
+            list.append(card);
+          });
+          preview.hidden = photos.length === 0;
+        };
+        input.addEventListener('change', () => {
+          [...input.files].forEach((file) => photos.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
+          input.value = '';
+          render();
+        });
+        return { getPhotos: () => photos };
+      };
+      const slipPhotoCollection = setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
+      const completedPhotoCollection = setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
+      document.querySelector('#close-image-modal').addEventListener('click', closeImageModal);
+      imageModal.addEventListener('click', (event) => { if (event.target === imageModal) closeImageModal(); });
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeImageModal(); });
+      const fileToPayload = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      document.querySelector('#entry-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!document.querySelector('[name="confirmation"]').value) {
+          document.querySelector('#form-status').textContent = '確認状態を選択してください。';
+          document.querySelector('[data-choice="confirmation"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        const status = document.querySelector('#form-status');
+        status.textContent = '登録中です…';
+        const value = (name) => document.querySelector(`[name="${name}"]`)?.value ?? '';
+        const payload = {
+          registeredDate: value('registered-date'), receivedDate: value('received-date'), staff: value('staff'), customerName: value('customer-name'), customerKana: value('customer-kana'), phone: value('phone'),
+          workTypes: [...document.querySelectorAll('#work-types input:checked')].map((input) => input.value), otherWork: value('other-work'), position: value('position'), threadFont: value('thread-font'), embroideryContent: value('embroidery-content'), hemmingMethod: value('hemming-method'), lengthCm: value('length'), hemmingThread: value('hemming-thread'), remainingFabric: value('remaining-fabric'), hemmingNotes: value('hemming-notes'), amount: value('amount'), accountsReceivable: value('accounts-receivable'), deposit: value('deposit'), confirmationStatus: value('confirmation'), notes: value('notes'),
+          products: [...document.querySelectorAll('.product-card')].map((card) => ({ number: card.querySelector('[name="product-number"]').value, branch: card.querySelector('[name="branch-number"]').value, combined: card.querySelector('[name="combined-number"]').value, name: card.querySelector('[name="product-name"]').value, color: card.querySelector('[name="color"]').value, size: card.querySelector('[name="size"]').value, quantity: card.querySelector('[name="quantity"]').value, workStates: [...card.querySelectorAll('.check-list input:checked')].map((input) => input.value), notes: card.querySelector('[name="product-notes"]').value })),
+          slipPhotos: await Promise.all(slipPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file))), completedPhotos: await Promise.all(completedPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file)))
+        };
+        try {
+          const response = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (!response.ok) throw new Error((await response.json()).error ?? '登録に失敗しました。');
+          status.textContent = '登録が完了しました。タイトル画面へ戻ります。';
+          window.setTimeout(() => { window.location.href = '/?registered=1'; }, 500);
+        } catch (error) { status.textContent = `登録できませんでした: ${error.message}`; }
+      });
+      const today = new Date().toISOString().slice(0, 10);
+      document.querySelector('[name="registered-date"]').value = today;
+      document.querySelector('[name="received-date"]').value = today;
+    </script>
+  </body>
+</html>

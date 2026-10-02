@@ -1,0 +1,15 @@
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.GeneratedMSBuildEditorConfig.editorconfig
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.AssemblyInfoInputs.cache
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.AssemblyInfo.cs
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.csproj.CoreCompileInputs.cache
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.sourcelink.json
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManager.genruntimeconfig.cache
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\bin\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.exe
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\bin\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.deps.json
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\bin\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.runtimeconfig.json
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\bin\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.dll
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\bin\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.pdb
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.dll
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\refint\WorkmanServiceManagerUpdated.dll
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\WorkmanServiceManagerUpdated.pdb
+C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\obj\Release\net9.0-windows\win-x64\ref\WorkmanServiceManagerUpdated.dll
