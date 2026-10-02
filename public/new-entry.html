@@ -32,6 +32,12 @@
       .check-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
       .check-list label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; font-weight: 400; cursor: pointer; }
       .check-list input { width: auto; margin: 0; accent-color: var(--yellow-dark); }
+      .choice-group { display: block; }
+      .choice-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 7px; }
+      .choice-button { min-height: 50px; border: 1px solid #c9d1d9; border-radius: 3px; background: #f8f9fa; color: #435364; cursor: pointer; font: inherit; font-size: 1rem; font-weight: 700; }
+      .choice-button:hover { border-color: #d7a239; background: #fff7e7; }
+      .choice-button.is-selected { border-color: var(--yellow); background: var(--yellow); color: var(--text); }
+      .choice-button:focus-visible { outline: 3px solid #f8d88d; outline-offset: 2px; }
       .photo-preview { margin-top: 2px; padding: 12px; border: 2px solid var(--yellow); border-radius: 10px; background: #fffcf5; }
       .photo-preview[hidden] { display: none; }
       .photo-preview-label { margin: 0 0 10px; color: #634a14; font-size: .85rem; font-weight: 700; }
@@ -103,9 +109,9 @@
           <h2 id="payment-heading">金額・確認</h2>
           <div class="grid">
             <label>注文金額<input name="amount" type="number" min="0" inputmode="numeric" /></label>
-            <label>売掛金<select name="accounts-receivable"><option>なし</option><option>あり</option></select></label>
-            <label>内金<select name="deposit"><option>なし</option><option>あり</option></select></label>
-            <label>確認状態<select name="confirmation"><option>要確認</option><option>登録済み</option></select></label>
+            <div class="choice-group"><span class="field-label">売掛金あり／なし</span><input name="accounts-receivable" type="hidden" value="" /><div class="choice-buttons" data-choice="accounts-receivable"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
+            <div class="choice-group"><span class="field-label">内金あり／なし</span><input name="deposit" type="hidden" value="" /><div class="choice-buttons" data-choice="deposit"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
+            <div class="choice-group"><span class="field-label">確認状態</span><input name="confirmation" type="hidden" value="" /><div class="choice-buttons" data-choice="confirmation"><button class="choice-button" type="button" data-value="登録済み">登録済み</button><button class="choice-button" type="button" data-value="要確認">要確認</button></div></div>
             <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
             <label class="full">完成写真<input id="completed-photo" name="completed-photo" type="file" accept="image/*" capture="environment" multiple /></label>
             <div class="full photo-preview" id="completed-preview" hidden><p class="photo-preview-label">添付した完成写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="completed-preview-list"></div></div>
@@ -137,6 +143,16 @@
         document.querySelector('#no-detail').hidden = selected.includes('刺繍') || selected.includes('プリント') || selected.includes('裾上げ');
       };
       document.querySelector('#work-types').addEventListener('change', updateDetails);
+      document.querySelectorAll('[data-choice]').forEach((choiceButtons) => {
+        const input = document.querySelector(`[name="${choiceButtons.dataset.choice}"]`);
+        choiceButtons.querySelectorAll('.choice-button').forEach((button) => {
+          button.addEventListener('click', () => {
+            const isAlreadySelected = button.classList.contains('is-selected');
+            input.value = isAlreadySelected ? '' : button.dataset.value;
+            choiceButtons.querySelectorAll('.choice-button').forEach((item) => item.classList.toggle('is-selected', !isAlreadySelected && item === button));
+          });
+        });
+      });
       const staffSelect = document.querySelector('#staff');
       const newStaffInput = document.querySelector('#new-staff');
       const staffAddControls = document.querySelector('#staff-add-controls');
