@@ -22,6 +22,11 @@
       label, .field-label { display: block; color: #314152; font-size: .9rem; font-weight: 700; }
       .required::after { margin-left: 4px; color: var(--danger); content: "必須"; font-size: .72rem; }
       input, select, textarea { width: 100%; margin-top: 7px; padding: 10px 11px; border: 1px solid #bfcbd6; border-radius: 7px; background: var(--white); color: var(--text); font: inherit; font-size: .95rem; }
+      .inline-add { display: flex; gap: 8px; margin-top: 8px; }
+      .inline-add[hidden] { display: none; }
+      .inline-add input { margin-top: 0; }
+      .inline-add button { min-width: 78px; min-height: 42px; border: 1px solid #b9a77c; border-radius: 7px; background: var(--white); color: var(--text); cursor: pointer; font: inherit; font-weight: 700; }
+      .inline-add button:hover { background: var(--cream); }
       textarea { min-height: 90px; resize: vertical; }
       input:focus, select:focus, textarea:focus { outline: 3px solid #f8d88d; border-color: var(--yellow-dark); }
       .check-list { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
@@ -70,7 +75,7 @@
             <label>アプリ内番号<input name="request-id" type="text" placeholder="登録時に自動採番" readonly /></label>
             <label>アプリ登録日<input name="registered-date" type="date" /></label>
             <label class="required">受付日<input name="received-date" type="date" required /></label>
-            <label>受付担当者<select name="staff"><option>指定なし</option><option>店長（イシダ）</option></select></label>
+            <label>受付担当者<select id="staff" name="staff"><option>指定なし</option><option>店長（イシダ）</option><option>クロダ</option><option>モリオカ</option><option>サカイ</option><option>マツモト（淳史）</option><option>フカヤマ</option><option>マツモト（香織）</option><option>ヤマオカ</option><option>ナカジマ</option><option>ホンダ</option><option>マツモト（慎也）</option><option>ヒロセ</option><option>ヤラ</option><option>ハセ</option><option>アベ</option><option>その他</option></select><span class="inline-add" id="staff-add-controls" hidden><input id="new-staff" type="text" placeholder="担当者名を追加" aria-label="追加する担当者名" /><button id="add-staff" type="button">追加</button></span></label>
             <label class="required">お客様名<input name="customer-name" type="text" required /></label>
             <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
             <label class="required">電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" required /></label>
@@ -132,6 +137,47 @@
         document.querySelector('#no-detail').hidden = selected.includes('刺繍') || selected.includes('プリント') || selected.includes('裾上げ');
       };
       document.querySelector('#work-types').addEventListener('change', updateDetails);
+      const staffSelect = document.querySelector('#staff');
+      const newStaffInput = document.querySelector('#new-staff');
+      const staffAddControls = document.querySelector('#staff-add-controls');
+      const customStaffStorageKey = 'workman-app-custom-staff';
+      const updateStaffAddControls = () => {
+        const isOther = staffSelect.value === 'その他';
+        staffAddControls.hidden = !isOther;
+        if (!isOther) newStaffInput.value = '';
+      };
+      const addStaffOption = (name, select = false) => {
+        const normalizedName = name.trim();
+        if (!normalizedName) return;
+        const existing = [...staffSelect.options].find((option) => option.value === normalizedName);
+        if (existing) { if (select) staffSelect.value = normalizedName; return; }
+        let customGroup = staffSelect.querySelector('optgroup');
+        if (!customGroup) {
+          customGroup = document.createElement('optgroup');
+          customGroup.label = '追加した担当者';
+          staffSelect.append(customGroup);
+        }
+        const option = new Option(normalizedName, normalizedName);
+        customGroup.append(option);
+        if (select) staffSelect.value = normalizedName;
+      };
+      try {
+        JSON.parse(localStorage.getItem(customStaffStorageKey) ?? '[]').forEach((name) => addStaffOption(String(name)));
+      } catch { localStorage.removeItem(customStaffStorageKey); }
+      staffSelect.addEventListener('change', updateStaffAddControls);
+      updateStaffAddControls();
+      document.querySelector('#add-staff').addEventListener('click', () => {
+        const name = newStaffInput.value.trim();
+        if (!name) { newStaffInput.focus(); return; }
+        const savedNames = JSON.parse(localStorage.getItem(customStaffStorageKey) ?? '[]');
+        if (!savedNames.includes(name)) {
+          savedNames.push(name);
+          localStorage.setItem(customStaffStorageKey, JSON.stringify(savedNames));
+        }
+        addStaffOption(name, true);
+        newStaffInput.value = '';
+        updateStaffAddControls();
+      });
       const imageModal = document.querySelector('#image-modal');
       const modalImage = document.querySelector('#modal-image');
       const closeImageModal = () => { imageModal.hidden = true; };
