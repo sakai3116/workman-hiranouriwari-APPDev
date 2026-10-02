@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,6 +29,50 @@ database.exec(`
     confirmation_status TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   ) STRICT;
+  CREATE TABLE IF NOT EXISTS request_details (
+    request_id INTEGER PRIMARY KEY REFERENCES requests(id) ON DELETE CASCADE,
+    app_number TEXT NOT NULL UNIQUE,
+    registered_date TEXT,
+    received_date TEXT,
+    staff TEXT,
+    customer_kana TEXT,
+    phone TEXT,
+    work_types_json TEXT NOT NULL DEFAULT '[]',
+    other_work TEXT,
+    position TEXT,
+    thread_font TEXT,
+    embroidery_content TEXT,
+    hemming_method TEXT,
+    length_cm TEXT,
+    hemming_thread TEXT,
+    remaining_fabric TEXT,
+    hemming_notes TEXT,
+    amount TEXT,
+    accounts_receivable TEXT,
+    deposit TEXT,
+    notes TEXT
+  ) STRICT;
+  CREATE TABLE IF NOT EXISTS request_products (
+    id INTEGER PRIMARY KEY,
+    request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    product_number TEXT,
+    branch_number TEXT,
+    combined_number TEXT,
+    product_name TEXT,
+    color TEXT,
+    size TEXT,
+    quantity TEXT,
+    work_states_json TEXT NOT NULL DEFAULT '[]',
+    notes TEXT
+  ) STRICT;
+  CREATE TABLE IF NOT EXISTS request_photos (
+    id INTEGER PRIMARY KEY,
+    request_id INTEGER NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
+    photo_type TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    original_name TEXT,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  ) STRICT;
 `);
 
 const existingAdmin = database.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin');
@@ -48,7 +92,7 @@ const readJsonBody = async (request) => {
   let body = '';
   for await (const chunk of request) {
     body += chunk;
-    if (body.length > 10_000) throw new Error('Request body is too large.');
+    if (body.length > 30 * 1024 * 1024) throw new Error('Request body is too large.');
   }
   return body ? JSON.parse(body) : {};
 };
@@ -85,6 +129,42 @@ const servePage = async (response, filename) => {
   }
 };
 
+const savePhotos = (requestId, photoType, photos = []) => {
+  const uploadDirectory = join(dataDirectory, 'uploads', String(requestId));
+  mkdirSync(uploadDirectory, { recursive: true });
+  const insertPhoto = database.prepare('INSERT INTO request_photos (request_id, photo_type, file_path, original_name) VALUES (?, ?, ?, ?)');
+  photos.forEach((photo, index) => {
+    if (!photo?.base64 || !String(photo.mimeType ?? '').startsWith('image/')) return;
+    const originalName = String(photo.name ?? `photo-${index + 1}`).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `${photoType}-${index + 1}-${Date.now()}-${originalName}`;
+    const relativePath = join('uploads', String(requestId), fileName);
+    writeFileSync(join(dataDirectory, relativePath), Buffer.from(photo.base64, 'base64'));
+    insertPhoto.run(requestId, photoType, relativePath, originalName);
+  });
+};
+
+const createRequest = (payload) => {
+  const customerName = String(payload.customerName ?? '').trim();
+  const confirmationStatus = String(payload.confirmationStatus ?? '').trim();
+  if (!customerName || !confirmationStatus) throw new Error('お客様名と確認状態は必須です。');
+  database.exec('BEGIN');
+  try {
+    const requestId = Number(database.prepare('INSERT INTO requests (customer_name, confirmation_status) VALUES (?, ?)').run(customerName, confirmationStatus).lastInsertRowid);
+    const appNumber = `WM-${String(requestId).padStart(6, '0')}`;
+    database.prepare(`INSERT INTO request_details (request_id, app_number, registered_date, received_date, staff, customer_kana, phone, work_types_json, other_work, position, thread_font, embroidery_content, hemming_method, length_cm, hemming_thread, remaining_fabric, hemming_notes, amount, accounts_receivable, deposit, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(requestId, appNumber, payload.registeredDate ?? null, payload.receivedDate ?? null, payload.staff ?? null, payload.customerKana ?? null, payload.phone ?? null, JSON.stringify(payload.workTypes ?? []), payload.otherWork ?? null, payload.position ?? null, payload.threadFont ?? null, payload.embroideryContent ?? null, payload.hemmingMethod ?? null, payload.lengthCm ?? null, payload.hemmingThread ?? null, payload.remainingFabric ?? null, payload.hemmingNotes ?? null, payload.amount ?? null, payload.accountsReceivable ?? null, payload.deposit ?? null, payload.notes ?? null);
+    const insertProduct = database.prepare('INSERT INTO request_products (request_id, product_number, branch_number, combined_number, product_name, color, size, quantity, work_states_json, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    (payload.products ?? []).forEach((product) => insertProduct.run(requestId, product.number ?? null, product.branch ?? null, product.combined ?? null, product.name ?? null, product.color ?? null, product.size ?? null, product.quantity ?? null, JSON.stringify(product.workStates ?? []), product.notes ?? null));
+    savePhotos(requestId, 'slip', payload.slipPhotos);
+    savePhotos(requestId, 'completed', payload.completedPhotos);
+    database.exec('COMMIT');
+    return { requestId, appNumber };
+  } catch (error) {
+    database.exec('ROLLBACK');
+    throw error;
+  }
+};
+
 const server = createServer(async (request, response) => {
   const requestUrl = new URL(request.url ?? '/', `http://${host}`);
   const pathname = requestUrl.pathname.replace(/\/$/, '') || '/';
@@ -92,6 +172,7 @@ const server = createServer(async (request, response) => {
   try {
     if (request.method === 'GET' && pathname === '/') return servePage(response, 'index.html');
     if (request.method === 'GET' && pathname === '/new') return servePage(response, 'new-entry.html');
+    if (request.method === 'GET' && pathname === '/search') return servePage(response, 'search.html');
     if (request.method === 'GET' && pathname === '/admin') return servePage(response, 'admin.html');
 
     if (request.method === 'POST' && pathname === '/api/admin/login') {
@@ -103,6 +184,17 @@ const server = createServer(async (request, response) => {
       const token = randomBytes(32).toString('hex');
       sessions.set(token, { username: user.username });
       return sendJson(response, 200, { username: user.username }, { 'Set-Cookie': `workman_admin_session=${token}; HttpOnly; SameSite=Strict; Path=/` });
+    }
+
+    if (request.method === 'POST' && pathname === '/api/requests') {
+      const payload = await readJsonBody(request);
+      return sendJson(response, 201, createRequest(payload));
+    }
+
+    if (request.method === 'GET' && pathname === '/api/requests') {
+      const query = `%${(requestUrl.searchParams.get('q') ?? '').trim()}%`;
+      const rows = database.prepare(`SELECT r.id, d.app_number, r.customer_name, d.customer_kana, d.phone, r.confirmation_status, r.created_at FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.customer_name LIKE ? OR d.customer_kana LIKE ? OR d.phone LIKE ? OR d.app_number LIKE ? ORDER BY r.id DESC LIMIT 100`).all(query, query, query, query);
+      return sendJson(response, 200, { rows });
     }
 
     if (request.method === 'POST' && pathname === '/api/admin/logout') {

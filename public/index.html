@@ -48,7 +48,7 @@
         <p>実行したい操作を選択してください。</p>
       </section>
       <section class="actions" aria-label="操作メニュー">
-        <button class="action" type="button" data-action="検索"><span class="action-inner"><span class="action-icon" aria-hidden="true">⌕</span><span class="action-title">検索</span><span class="action-description">受付・お客様・商品情報から過去の履歴を検索します。</span></span></button>
+        <button class="action" type="button" data-route="/search"><span class="action-inner"><span class="action-icon" aria-hidden="true">⌕</span><span class="action-title">検索</span><span class="action-description">受付・お客様・商品情報から過去の履歴を検索します。</span></span></button>
         <button class="action action--primary" type="button" data-route="/new"><span class="action-inner"><span class="action-icon" aria-hidden="true">＋</span><span class="action-title">新規追加</span><span class="action-description">新しい受付伝票を登録します。</span></span></button>
       </section>
       <p class="status" id="status" aria-live="polite">メニューを選択してください。</p>
@@ -65,6 +65,10 @@
       });
       document.querySelectorAll('[data-action]').forEach((button) => {
         button.addEventListener('click', () => {
+          if (button.dataset.action === '同期') {
+            window.location.reload();
+            return;
+          }
           status.textContent = `「${button.dataset.action}」を選択しました。機能は今後追加します。`;
         });
       });

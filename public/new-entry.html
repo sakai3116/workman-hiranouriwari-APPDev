@@ -250,21 +250,41 @@
           input.value = '';
           render();
         });
+        return { getPhotos: () => photos };
       };
-      setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
-      setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
+      const slipPhotoCollection = setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
+      const completedPhotoCollection = setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
       document.querySelector('#close-image-modal').addEventListener('click', closeImageModal);
       imageModal.addEventListener('click', (event) => { if (event.target === imageModal) closeImageModal(); });
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeImageModal(); });
-      document.querySelector('#entry-form').addEventListener('submit', (event) => {
+      const fileToPayload = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: String(reader.result).split(',')[1] });
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      document.querySelector('#entry-form').addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!document.querySelector('[name="confirmation"]').value) {
           document.querySelector('#form-status').textContent = '確認状態を選択してください。';
           document.querySelector('[data-choice="confirmation"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
         }
-        document.querySelector('#form-status').textContent = '登録が完了しました。タイトル画面へ戻ります。';
-        window.setTimeout(() => { window.location.href = '/?registered=1'; }, 500);
+        const status = document.querySelector('#form-status');
+        status.textContent = '登録中です…';
+        const value = (name) => document.querySelector(`[name="${name}"]`)?.value ?? '';
+        const payload = {
+          registeredDate: value('registered-date'), receivedDate: value('received-date'), staff: value('staff'), customerName: value('customer-name'), customerKana: value('customer-kana'), phone: value('phone'),
+          workTypes: [...document.querySelectorAll('#work-types input:checked')].map((input) => input.value), otherWork: value('other-work'), position: value('position'), threadFont: value('thread-font'), embroideryContent: value('embroidery-content'), hemmingMethod: value('hemming-method'), lengthCm: value('length'), hemmingThread: value('hemming-thread'), remainingFabric: value('remaining-fabric'), hemmingNotes: value('hemming-notes'), amount: value('amount'), accountsReceivable: value('accounts-receivable'), deposit: value('deposit'), confirmationStatus: value('confirmation'), notes: value('notes'),
+          products: [...document.querySelectorAll('.product-card')].map((card) => ({ number: card.querySelector('[name="product-number"]').value, branch: card.querySelector('[name="branch-number"]').value, combined: card.querySelector('[name="combined-number"]').value, name: card.querySelector('[name="product-name"]').value, color: card.querySelector('[name="color"]').value, size: card.querySelector('[name="size"]').value, quantity: card.querySelector('[name="quantity"]').value, workStates: [...card.querySelectorAll('.check-list input:checked')].map((input) => input.value), notes: card.querySelector('[name="product-notes"]').value })),
+          slipPhotos: await Promise.all(slipPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file))), completedPhotos: await Promise.all(completedPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file)))
+        };
+        try {
+          const response = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (!response.ok) throw new Error((await response.json()).error ?? '登録に失敗しました。');
+          status.textContent = '登録が完了しました。タイトル画面へ戻ります。';
+          window.setTimeout(() => { window.location.href = '/?registered=1'; }, 500);
+        } catch (error) { status.textContent = `登録できませんでした: ${error.message}`; }
       });
       const today = new Date().toISOString().slice(0, 10);
       document.querySelector('[name="registered-date"]').value = today;
