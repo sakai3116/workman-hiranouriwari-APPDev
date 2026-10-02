@@ -1,2 +1,0 @@
-C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceControlV2\publish\WorkmanServiceControlV3.pdb
-C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceControlV2\publish\WorkmanServiceControlV3.exe

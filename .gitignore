@@ -1,0 +1,15 @@
+# ローカル実行時に生成・更新されるデータ
+data/workman-prototype.sqlite
+data/uploads/
+
+# Node.js の復元可能な依存関係
+node_modules/
+
+# .NET のビルド中間ファイルと配布用にローカル生成する EXE
+**/bin/
+**/obj/
+**/publish/
+
+# ローカル環境ごとの設定・ログ
+.env
+*.log

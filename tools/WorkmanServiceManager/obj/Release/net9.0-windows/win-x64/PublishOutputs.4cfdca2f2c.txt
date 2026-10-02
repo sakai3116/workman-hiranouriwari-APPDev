@@ -1,2 +1,0 @@
-C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\publish\WorkmanServiceManagerUpdated.pdb
-C:\my_dev\workman-hiranouriwari-APPDev\tools\WorkmanServiceManager\publish\WorkmanServiceManagerUpdated.exe
