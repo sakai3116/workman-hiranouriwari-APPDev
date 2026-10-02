@@ -8,7 +8,7 @@
       "version": "1.0.0",
       "restore": {
         "projectUniqueName": "C:\\my_dev\\workman-hiranouriwari-APPDev\\tools\\WorkmanServiceManager\\WorkmanServiceManager.csproj",
-        "projectName": "WorkmanServiceManagerUpdated",
+        "projectName": "WorkmanServiceManager",
         "projectPath": "C:\\my_dev\\workman-hiranouriwari-APPDev\\tools\\WorkmanServiceManager\\WorkmanServiceManager.csproj",
         "packagesPath": "C:\\Users\\kalar\\.nuget\\packages\\",
         "outputPath": "C:\\my_dev\\workman-hiranouriwari-APPDev\\tools\\WorkmanServiceManager\\obj\\",
@@ -49,14 +49,6 @@
       "frameworks": {
         "net9.0-windows7.0": {
           "targetAlias": "net9.0-windows",
-          "dependencies": {
-            "Microsoft.NET.ILLink.Tasks": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[9.0.4, )",
-              "autoReferenced": true
-            }
-          },
           "imports": [
             "net461",
             "net462",
@@ -77,11 +69,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
-        }
-      },
-      "runtimes": {
-        "win-x64": {
-          "#import": []
         }
       }
     }

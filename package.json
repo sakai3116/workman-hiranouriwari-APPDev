@@ -5,5 +5,8 @@
   "description": "ワークマンアプリの最小Webアプリ基盤",
   "scripts": {
     "start": "node server.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
   }
 }
