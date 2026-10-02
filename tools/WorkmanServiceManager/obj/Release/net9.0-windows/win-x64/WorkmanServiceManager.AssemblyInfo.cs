@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("WorkmanServiceManager")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("WorkmanServiceManagerUpdated")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2afe2555a41479480ac08ef8d63baae1ab20422b")]
-[assembly: System.Reflection.AssemblyProductAttribute("WorkmanServiceManager")]
-[assembly: System.Reflection.AssemblyTitleAttribute("WorkmanServiceManager")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a79aef9de0cd8b721f2c357e5a9b54b2c717653")]
+[assembly: System.Reflection.AssemblyProductAttribute("WorkmanServiceManagerUpdated")]
+[assembly: System.Reflection.AssemblyTitleAttribute("WorkmanServiceManagerUpdated")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]

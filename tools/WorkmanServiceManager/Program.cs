@@ -21,6 +21,7 @@ internal sealed class ServiceManagerForm : Form
     private readonly Button stopButton = new();
     private readonly Button checkButton = new();
     private readonly Label locationLabel = new();
+    private readonly Label databaseLabel = new();
     private readonly HttpClient httpClient = new() { Timeout = TimeSpan.FromSeconds(2) };
     private readonly string? projectRoot;
 
@@ -29,8 +30,8 @@ internal sealed class ServiceManagerForm : Form
         projectRoot = FindProjectRoot();
 
         Text = "ワークマンアプリ サービス管理";
-        ClientSize = new Size(500, 310);
-        MinimumSize = new Size(500, 310);
+        ClientSize = new Size(500, 375);
+        MinimumSize = new Size(500, 375);
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(255, 252, 245);
@@ -54,7 +55,7 @@ internal sealed class ServiceManagerForm : Form
         {
             AutoSize = true,
             Location = new Point(25, 47),
-            Text = "ローカルWebサーバーの起動・状態確認",
+            Text = "ローカルWeb・SQLiteデータベースの起動・状態確認",
             ForeColor = Color.FromArgb(98, 74, 23)
         });
         Controls.Add(header);
@@ -68,7 +69,7 @@ internal sealed class ServiceManagerForm : Form
         statusLabel.Text = "状態を確認してください。";
         Controls.Add(statusLabel);
 
-        startButton.Text = "サーバーを起動";
+        startButton.Text = "Web・DBを起動";
         startButton.Location = new Point(25, 177);
         startButton.Size = new Size(140, 50);
         startButton.BackColor = Color.FromArgb(242, 170, 32);
@@ -77,7 +78,7 @@ internal sealed class ServiceManagerForm : Form
         startButton.Click += async (_, _) => await StartServerAsync();
         Controls.Add(startButton);
 
-        stopButton.Text = "サーバーを停止";
+        stopButton.Text = "Web・DBを停止";
         stopButton.Location = new Point(180, 177);
         stopButton.Size = new Size(140, 50);
         stopButton.BackColor = Color.FromArgb(255, 245, 245);
@@ -96,8 +97,16 @@ internal sealed class ServiceManagerForm : Form
         checkButton.Click += async (_, _) => await CheckStatusAsync();
         Controls.Add(checkButton);
 
+        databaseLabel.AutoSize = false;
+        databaseLabel.Location = new Point(25, 245);
+        databaseLabel.Size = new Size(450, 42);
+        databaseLabel.Padding = new Padding(12, 8, 12, 8);
+        databaseLabel.BackColor = Color.FromArgb(255, 244, 216);
+        databaseLabel.ForeColor = Color.FromArgb(99, 74, 20);
+        Controls.Add(databaseLabel);
+
         locationLabel.AutoSize = false;
-        locationLabel.Location = new Point(25, 246);
+        locationLabel.Location = new Point(25, 305);
         locationLabel.Size = new Size(450, 42);
         locationLabel.ForeColor = Color.FromArgb(97, 112, 130);
         locationLabel.Text = projectRoot is null
@@ -118,7 +127,7 @@ internal sealed class ServiceManagerForm : Form
 
         if (await IsServerRunningAsync())
         {
-            SetStatus("サーバーはすでに起動しています。", true);
+            SetStatus("Web・DBはすでに起動しています。", true);
             return;
         }
 
@@ -133,7 +142,7 @@ internal sealed class ServiceManagerForm : Form
                 CreateNoWindow = true
             });
 
-            SetStatus("サーバーを起動中です…", null);
+            SetStatus("Web・DBを起動中です…", null);
             await Task.Delay(900);
             await CheckStatusAsync();
         }
@@ -150,6 +159,7 @@ internal sealed class ServiceManagerForm : Form
         var running = await IsServerRunningAsync();
         SetButtonsEnabled(true);
         SetStatus(running ? $"稼働中: {AppUrl}" : "停止中です。［サーバーを起動］を押してください。", running);
+        UpdateDatabaseStatus(running);
     }
 
     private async Task StopServerAsync()
@@ -162,8 +172,8 @@ internal sealed class ServiceManagerForm : Form
         }
 
         var result = MessageBox.Show(
-            "ワークマンアプリのWebサーバーを停止します。よろしいですか？",
-            "サーバーを停止",
+            "ワークマンアプリのWebサーバーと、それが開いているSQLite DBを停止します。よろしいですか？",
+            "Web・DBを停止",
             MessageBoxButtons.YesNo,
             MessageBoxIcon.Warning);
 
@@ -176,7 +186,8 @@ internal sealed class ServiceManagerForm : Form
         {
             serverProcess.Kill(entireProcessTree: true);
             await serverProcess.WaitForExitAsync();
-            SetStatus("サーバーを停止しました。", false);
+            SetStatus("Web・DBを停止しました。", false);
+            UpdateDatabaseStatus(false);
         }
         catch (Exception exception)
         {
@@ -223,6 +234,25 @@ internal sealed class ServiceManagerForm : Form
         startButton.Enabled = enabled;
         stopButton.Enabled = enabled;
         checkButton.Enabled = enabled;
+    }
+
+    private void UpdateDatabaseStatus(bool serverRunning)
+    {
+        if (projectRoot is null)
+        {
+            databaseLabel.Text = "SQLite DB: プロジェクトフォルダが見つかりません。";
+            return;
+        }
+
+        var databasePath = Path.Combine(projectRoot, "data", "workman-prototype.sqlite");
+        if (!File.Exists(databasePath))
+        {
+            databaseLabel.Text = "SQLite DB: 未作成（Web・DBを起動すると作成されます）";
+            return;
+        }
+
+        var sizeKb = Math.Max(1, new FileInfo(databasePath).Length / 1024);
+        databaseLabel.Text = $"SQLite DB: {(serverRunning ? "使用中" : "ファイル待機中")} / {sizeKb:N0} KB\n{databasePath}";
     }
 
     private static Process? FindServerProcess()

@@ -7,19 +7,19 @@
   "targets": {
     ".NETCoreApp,Version=v9.0": {},
     ".NETCoreApp,Version=v9.0/win-x64": {
-      "WorkmanServiceManager/1.0.0": {
+      "WorkmanServiceManagerUpdated/1.0.0": {
         "dependencies": {
           "Microsoft.NET.ILLink.Tasks": "9.0.4"
         },
         "runtime": {
-          "WorkmanServiceManager.dll": {}
+          "WorkmanServiceManagerUpdated.dll": {}
         }
       },
       "Microsoft.NET.ILLink.Tasks/9.0.4": {}
     }
   },
   "libraries": {
-    "WorkmanServiceManager/1.0.0": {
+    "WorkmanServiceManagerUpdated/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
