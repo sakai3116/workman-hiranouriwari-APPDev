@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -142,6 +142,24 @@ document.querySelector('#entry-form').addEventListener('submit',async event=>{ev
   }
 };
 
+const serveEditPage = async (response) => {
+  try {
+    const [page, editScript] = await Promise.all([
+      readFile(join(projectRoot, 'public', 'new-entry.html'), 'utf8'),
+      readFile(join(projectRoot, 'public', 'edit-entry.js'), 'utf8')
+    ]);
+    response.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:;"
+    });
+    response.end(page.replace('</body>', `<script>${editScript}</script></body>`));
+  } catch (error) {
+    console.error(error);
+    response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Internal Server Error');
+  }
+};
+
 const serveUpload = async (response, pathname) => {
   const relativePath = pathname.replace(/^\//, '');
   const uploadsRoot = join(dataDirectory, 'uploads');
@@ -173,6 +191,18 @@ const savePhotos = (requestId, photoType, photos = []) => {
   });
 };
 
+const removePhotos = (requestId, photoIds = []) => {
+  const ids = [...new Set((photoIds ?? []).map(Number).filter(Number.isInteger))];
+  if (!ids.length) return;
+  const placeholders = ids.map(() => '?').join(', ');
+  const photos = database.prepare(`SELECT id, file_path FROM request_photos WHERE request_id = ? AND id IN (${placeholders})`).all(requestId, ...ids);
+  database.prepare(`DELETE FROM request_photos WHERE request_id = ? AND id IN (${placeholders})`).run(requestId, ...ids);
+  photos.forEach(({ file_path: filePath }) => {
+    const absolutePath = join(dataDirectory, filePath);
+    if (absolutePath.startsWith(join(dataDirectory, 'uploads')) && existsSync(absolutePath)) unlinkSync(absolutePath);
+  });
+};
+
 const createRequest = (payload) => {
   const customerName = String(payload.customerName ?? '').trim();
   const confirmationStatus = String(payload.confirmationStatus ?? '').trim();
@@ -201,10 +231,13 @@ const updateRequest = (requestId, payload) => {
   database.exec('BEGIN');
   try {
     database.prepare('UPDATE requests SET customer_name = ?, confirmation_status = ? WHERE id = ?').run(customerName, confirmationStatus, requestId);
-    database.prepare('UPDATE request_details SET received_date=?, staff=?, customer_kana=?, phone=?, work_types_json=?, amount=?, accounts_receivable=?, deposit=?, notes=? WHERE request_id=?').run(payload.receivedDate ?? null, payload.staff ?? null, payload.customerKana ?? null, payload.phone ?? null, JSON.stringify(payload.workTypes ?? []), payload.amount ?? null, payload.accountsReceivable ?? null, payload.deposit ?? null, payload.notes ?? null, requestId);
+    database.prepare('UPDATE request_details SET registered_date=?, received_date=?, staff=?, customer_kana=?, phone=?, work_types_json=?, other_work=?, position=?, thread_font=?, embroidery_content=?, hemming_method=?, length_cm=?, hemming_thread=?, remaining_fabric=?, hemming_notes=?, amount=?, accounts_receivable=?, deposit=?, notes=? WHERE request_id=?').run(payload.registeredDate ?? null, payload.receivedDate ?? null, payload.staff ?? null, payload.customerKana ?? null, payload.phone ?? null, JSON.stringify(payload.workTypes ?? []), payload.otherWork ?? null, payload.position ?? null, payload.threadFont ?? null, payload.embroideryContent ?? null, payload.hemmingMethod ?? null, payload.lengthCm ?? null, payload.hemmingThread ?? null, payload.remainingFabric ?? null, payload.hemmingNotes ?? null, payload.amount ?? null, payload.accountsReceivable ?? null, payload.deposit ?? null, payload.notes ?? null, requestId);
     database.prepare('DELETE FROM request_products WHERE request_id = ?').run(requestId);
-    const add = database.prepare('INSERT INTO request_products (request_id, combined_number, product_name, notes) VALUES (?, ?, ?, ?)');
-    (payload.products ?? []).forEach((product) => add.run(requestId, product.combined ?? null, product.name ?? null, product.notes ?? null));
+    const add = database.prepare('INSERT INTO request_products (request_id, product_number, branch_number, combined_number, product_name, color, size, quantity, work_states_json, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    (payload.products ?? []).forEach((product) => add.run(requestId, product.number ?? null, product.branch ?? null, product.combined ?? null, product.name ?? null, product.color ?? null, product.size ?? null, product.quantity ?? null, JSON.stringify(product.workStates ?? []), product.notes ?? null));
+    removePhotos(requestId, payload.removedPhotoIds);
+    savePhotos(requestId, 'slip', payload.slipPhotos);
+    savePhotos(requestId, 'completed', payload.completedPhotos);
     database.exec('COMMIT'); return { requestId };
   } catch (error) { database.exec('ROLLBACK'); throw error; }
 };
@@ -217,7 +250,7 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && pathname === '/') return servePage(response, 'index.html');
     if (request.method === 'GET' && pathname === '/new') return servePage(response, 'new-entry.html');
     if (request.method === 'GET' && pathname === '/search') return servePage(response, 'search-edit.html');
-    if (request.method === 'GET' && pathname === '/edit') return servePage(response, 'new-entry.html', true);
+    if (request.method === 'GET' && pathname === '/edit') return serveEditPage(response);
     if (request.method === 'GET' && pathname === '/admin') return servePage(response, 'admin.html');
     if (request.method === 'GET' && pathname.startsWith('/uploads/')) return serveUpload(response, pathname);
 
@@ -239,7 +272,7 @@ const server = createServer(async (request, response) => {
 
     if (request.method === 'GET' && pathname === '/api/requests') {
       const query = `%${(requestUrl.searchParams.get('q') ?? '').trim()}%`;
-      const rows = database.prepare(`SELECT r.id, d.app_number, r.customer_name, d.customer_kana, d.phone, d.staff, d.received_date, d.registered_date, d.work_types_json, d.amount, d.deposit, r.confirmation_status, r.created_at, (SELECT group_concat(trim(coalesce(combined_number, '') || ' ' || coalesce(product_name, '')), ' / ') FROM request_products product WHERE product.request_id = r.id) AS product_details, (SELECT file_path FROM request_photos p WHERE p.request_id = r.id AND p.photo_type = 'slip' ORDER BY p.id LIMIT 1) AS thumbnail_path FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.customer_name LIKE ? OR d.customer_kana LIKE ? OR d.phone LIKE ? OR d.app_number LIKE ? ORDER BY r.id DESC LIMIT 100`).all(query, query, query, query);
+      const rows = database.prepare(`SELECT r.id, d.app_number, r.customer_name, d.customer_kana, d.phone, d.staff, d.received_date, d.registered_date, d.work_types_json, d.amount, d.deposit, r.confirmation_status, r.created_at, (SELECT group_concat(trim(coalesce(combined_number, '') || ' ' || coalesce(product_name, '')), ' / ') FROM request_products product WHERE product.request_id = r.id) AS product_details, (SELECT group_concat(file_path, '|') FROM request_photos p WHERE p.request_id = r.id) AS photo_paths FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.customer_name LIKE ? OR d.customer_kana LIKE ? OR d.phone LIKE ? OR d.app_number LIKE ? ORDER BY r.id DESC LIMIT 100`).all(query, query, query, query);
       return sendJson(response, 200, { rows });
     }
 
@@ -248,8 +281,9 @@ const server = createServer(async (request, response) => {
       const requestId = Number(requestMatch[1]);
       const requestRow = database.prepare('SELECT r.id, r.customer_name, r.confirmation_status, d.* FROM requests r JOIN request_details d ON d.request_id = r.id WHERE r.id = ?').get(requestId);
       if (!requestRow) return sendJson(response, 404, { error: 'データが見つかりません。' });
-      const products = database.prepare('SELECT combined_number, product_name, notes FROM request_products WHERE request_id = ?').all(requestId);
-      return sendJson(response, 200, { request: requestRow, products });
+      const products = database.prepare('SELECT product_number, branch_number, combined_number, product_name, color, size, quantity, work_states_json, notes FROM request_products WHERE request_id = ? ORDER BY id').all(requestId);
+      const photos = database.prepare('SELECT id, photo_type, file_path, original_name FROM request_photos WHERE request_id = ? ORDER BY id').all(requestId);
+      return sendJson(response, 200, { request: requestRow, products, photos });
     }
     if (requestMatch && request.method === 'PUT') return sendJson(response, 200, updateRequest(Number(requestMatch[1]), await readJsonBody(request)));
 

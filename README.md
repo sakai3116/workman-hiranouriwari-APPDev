@@ -19,6 +19,57 @@ npm start
 
 ブラウザで `http://127.0.0.1:3000` を開くと、ワークマンアプリが表示されます。
 
+## Tailscale VPN経由で他端末から使う
+
+WebアプリはサーバーPCの `127.0.0.1:3000` だけで待ち受けます。スマートフォン・ノートPCからのアクセスには **Tailscale Serve** を使います。これにより、自宅LAN全体へ公開せず、同じTailnetに参加している端末だけへHTTPSで公開できます。PostgreSQL（5432番ポート）は公開しません。
+
+### 初回設定（サーバーPCで一度だけ）
+
+1. サーバーPCにTailscaleをインストールし、Tailscaleへログインします。
+2. スマートフォン・ノートPCにもTailscaleをインストールし、**同じTailnet**へログインします。
+3. サーバーPCでWebサーバーを起動します。サービス管理EXEの「Webサーバー」→「起動」、またはプロジェクトフォルダで `npm start` を実行します。
+4. サーバーPCで**管理者として PowerShell を起動**し、次を実行します。
+
+   ```powershell
+   tailscale serve --bg 3000
+   ```
+
+5. 初回のみ、表示されたTailscaleの許可用URLをブラウザで開き、Serveの利用を許可します。
+6. コマンド出力に表示される `https://＜PC名＞.＜Tailnet名＞.ts.net/` が接続用URLです。スマートフォン・ノートPCのブラウザで開きます。
+
+### 日常の起動手順
+
+1. サーバーPCでTailscaleが起動・ログイン済みであることを確認します。
+2. Webサーバーを起動します。
+3. 別端末では、上記の `https://…ts.net/` のURLを開きます。
+
+`tailscale serve --bg 3000` の設定はバックグラウンドで維持されるため、通常は毎回設定し直す必要はありません。PC再起動後も、Webサーバーさえ起動すれば同じURLから接続できます。
+
+### 状態確認・停止
+
+サーバーPCの管理者 PowerShell で実行します。
+
+```powershell
+# Serveの公開URLと状態を確認
+tailscale serve status
+
+# Tailnet内への公開を停止
+tailscale serve --https=443 off
+```
+
+外部端末で `http://127.0.0.1:3000/` を開いてはいけません。`127.0.0.1` はアクセスした端末自身を指すためです。必ず `https://…ts.net/` のURLを使います。インターネット全体へ公開するTailscale Funnelは使用しません。
+
+### URLのPC名を変更する（任意）
+
+URLの先頭にあるPC名はTailscaleのマシン名です。サーバーPCの管理者 PowerShell で、たとえば次のように変更できます。
+
+```powershell
+tailscale set --hostname=wm-001
+tailscale serve status
+```
+
+変更後は、`https://wm-001.＜Tailnet名＞.ts.net/` のような新しいURLを使用します。
+
 WebアプリはNode.jsで動作します。PostgreSQLへ移行するための `pg` パッケージも導入済みです。
 
 ## Web・DBの個別管理
@@ -27,10 +78,10 @@ WebサーバーとPostgreSQL DBは、それぞれ別のプロセス・ポート�
 
 | 対象 | IP・ポート | 起動対象 |
 | --- | --- | --- |
-| Webアプリ | `127.0.0.1:3000` | Node.js (`server.mjs`) |
+| Webアプリ | `127.0.0.1:3000`（Tailscale ServeでVPN公開） | Node.js (`server.mjs`) |
 | PostgreSQL DB | `127.0.0.1:5432` | Windowsサービス `postgresql-x64-18` |
 
-個別管理用EXEは [WorkmanServiceControlV3.exe](tools/WorkmanServiceControlV2/publish/WorkmanServiceControlV3.exe) です。
+個別管理用EXEは [WorkmanServiceControlWebDb.exe](tools/WorkmanServiceControlV2/publish/WorkmanServiceControlWebDb.exe) です。Tailscale Serve は管理者 PowerShell で一度設定すればよく、このEXEでは管理しません。
 
 - 起動時に管理者権限を許可します。
 - Web／DBを別々に起動・停止できます。

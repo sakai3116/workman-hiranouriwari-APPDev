@@ -250,7 +250,16 @@
           input.value = '';
           render();
         });
-        return { getPhotos: () => photos };
+        let savedPhotoIds = [];
+        return {
+          getNewPhotos: () => photos.filter((photo) => photo.file),
+          setExistingPhotos: (existingPhotos) => {
+            savedPhotoIds = existingPhotos.map((photo) => photo.id);
+            photos = existingPhotos.map((photo) => ({ id: `saved-${photo.id}`, savedPhotoId: photo.id, url: `/${photo.file_path.replaceAll('\\', '/')}` }));
+            render();
+          },
+          getRemovedPhotoIds: () => savedPhotoIds.filter((id) => !photos.some((photo) => photo.savedPhotoId === id))
+        };
       };
       const slipPhotoCollection = setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
       const completedPhotoCollection = setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
@@ -277,7 +286,7 @@
           registeredDate: value('registered-date'), receivedDate: value('received-date'), staff: value('staff'), customerName: value('customer-name'), customerKana: value('customer-kana'), phone: value('phone'),
           workTypes: [...document.querySelectorAll('#work-types input:checked')].map((input) => input.value), otherWork: value('other-work'), position: value('position'), threadFont: value('thread-font'), embroideryContent: value('embroidery-content'), hemmingMethod: value('hemming-method'), lengthCm: value('length'), hemmingThread: value('hemming-thread'), remainingFabric: value('remaining-fabric'), hemmingNotes: value('hemming-notes'), amount: value('amount'), accountsReceivable: value('accounts-receivable'), deposit: value('deposit'), confirmationStatus: value('confirmation'), notes: value('notes'),
           products: [...document.querySelectorAll('.product-card')].map((card) => ({ number: card.querySelector('[name="product-number"]').value, branch: card.querySelector('[name="branch-number"]').value, combined: card.querySelector('[name="combined-number"]').value, name: card.querySelector('[name="product-name"]').value, color: card.querySelector('[name="color"]').value, size: card.querySelector('[name="size"]').value, quantity: card.querySelector('[name="quantity"]').value, workStates: [...card.querySelectorAll('.check-list input:checked')].map((input) => input.value), notes: card.querySelector('[name="product-notes"]').value })),
-          slipPhotos: await Promise.all(slipPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file))), completedPhotos: await Promise.all(completedPhotoCollection.getPhotos().map(({ file }) => fileToPayload(file)))
+          slipPhotos: await Promise.all(slipPhotoCollection.getNewPhotos().map(({ file }) => fileToPayload(file))), completedPhotos: await Promise.all(completedPhotoCollection.getNewPhotos().map(({ file }) => fileToPayload(file)))
         };
         try {
           const response = await fetch('/api/requests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
