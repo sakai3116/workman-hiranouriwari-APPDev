@@ -13,3 +13,11 @@ node_modules/
 # ローカル環境ごとの設定・ログ
 .env
 *.log
+
+# OCR trial: local runtime, models and private evaluation data
+.venv-ocr/
+tools/ocr-lab/models/
+tools/ocr-lab/results/
+tools/ocr-lab/samples/
+tools/ocr-lab/inputs/
+tools/ocr-lab/__pycache__/

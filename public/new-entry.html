@@ -38,6 +38,19 @@
       .choice-button:hover { border-color: #d7a239; background: #fff7e7; }
       .choice-button.is-selected { border-color: var(--yellow); background: var(--yellow); color: var(--text); }
       .choice-button:focus-visible { outline: 3px solid #f8d88d; outline-offset: 2px; }
+      .ocr-panel { margin-top: 12px; padding: 10px; background: var(--cream); border-radius: 7px; font-size: .85rem; }
+      .ocr-panel input[type="checkbox"] { width: auto; margin-right: 6px; }
+      .ocr-filled { background: #fff5d6; border-color: #d9910c; }
+      [hidden] { display: none !important; }
+      .photo-input { min-width: 0; }
+      .photo-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 7px; }
+      .photo-controls .button { min-height: 44px; padding: 10px 12px; }
+      .photo-input input[hidden] { display: none; }
+      .photo-help, .photo-status { margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
+      .photo-status:empty { display: none; }
+      .photo-input:focus-within { outline: 3px solid #f8d88d; outline-offset: 4px; border-radius: 7px; }
+      .photo-camera-button { display: none; }
+      @media (max-width: 680px), (any-pointer: coarse) { .photo-camera-button { display: inline-block; } }
       .photo-preview { margin-top: 2px; padding: 12px; border: 2px solid var(--yellow); border-radius: 10px; background: #fffcf5; }
       .photo-preview[hidden] { display: none; }
       .photo-preview-label { margin: 0 0 10px; color: #634a14; font-size: .85rem; font-weight: 700; }
@@ -85,7 +98,18 @@
             <label class="required">お客様名<input name="customer-name" type="text" required /></label>
             <label>フリガナ<input name="customer-kana" type="text" placeholder="全角カナ" /></label>
             <label>電話番号<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]+" placeholder="例：09012345678（ハイフンなし）" /></label>
-            <label>伝票写真<input id="slip-photo" name="slip-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="photo-input" id="slip-photo-controls" role="group" aria-labelledby="slip-photo-label" aria-describedby="slip-photo-help">
+              <span class="field-label" id="slip-photo-label">伝票写真</span>
+              <div class="photo-controls">
+                <button class="button button--secondary photo-camera-button" type="button" data-photo-action="camera">撮影する</button>
+                <button class="button button--secondary" type="button" data-photo-action="select">写真・ファイルを選択</button>
+                <button class="button button--secondary" type="button" data-photo-action="paste">画像を貼り付け</button>
+              </div>
+              <input id="slip-photo" name="slip-photo" type="file" accept="image/*" multiple hidden />
+              <input id="slip-photo-camera" type="file" accept="image/*" capture="environment" hidden />
+              <p class="photo-help" id="slip-photo-help">写真は複数追加できます。PCではこの欄をクリックして Ctrl＋V（Macは⌘＋V）でも貼り付けできます。</p>
+              <p class="photo-status" role="status" aria-live="polite"></p>
+            </div>
             <div class="full photo-preview" id="slip-preview" hidden><p class="photo-preview-label">添付した伝票写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="slip-preview-list"></div></div>
             <div class="full"><span class="field-label">作業内容</span><div class="check-list" id="work-types"><label><input type="checkbox" value="発注" />発注</label><label><input type="checkbox" value="刺繍" />刺繍</label><label><input type="checkbox" value="裾上げ" />裾上げ</label><label><input type="checkbox" value="プリント" />プリント</label><label><input type="checkbox" value="予約" />予約</label><label><input type="checkbox" value="見積" />見積</label><label><input type="checkbox" value="その他" />その他</label></div></div>
             <label class="full details" id="other-details">その他の作業内容<textarea name="other-work" placeholder="作業内容を入力してください"></textarea></label>
@@ -113,7 +137,18 @@
             <div class="choice-group"><span class="field-label">内金あり／なし</span><input name="deposit" type="hidden" value="" /><div class="choice-buttons" data-choice="deposit"><button class="choice-button" type="button" data-value="あり">あり</button><button class="choice-button" type="button" data-value="なし">なし</button></div></div>
             <div class="choice-group"><span class="field-label required">確認状態</span><input name="confirmation" type="hidden" value="" /><div class="choice-buttons" data-choice="confirmation"><button class="choice-button" type="button" data-value="登録済み">登録済み</button><button class="choice-button" type="button" data-value="要確認">要確認</button></div></div>
             <label class="full">備考・注意事項<textarea name="notes"></textarea></label>
-            <label class="full">完成写真<input id="completed-photo" name="completed-photo" type="file" accept="image/*" capture="environment" multiple /></label>
+            <div class="photo-input full" id="completed-photo-controls" role="group" aria-labelledby="completed-photo-label" aria-describedby="completed-photo-help">
+              <span class="field-label" id="completed-photo-label">完成写真</span>
+              <div class="photo-controls">
+                <button class="button button--secondary photo-camera-button" type="button" data-photo-action="camera">撮影する</button>
+                <button class="button button--secondary" type="button" data-photo-action="select">写真・ファイルを選択</button>
+                <button class="button button--secondary" type="button" data-photo-action="paste">画像を貼り付け</button>
+              </div>
+              <input id="completed-photo" name="completed-photo" type="file" accept="image/*" multiple hidden />
+              <input id="completed-photo-camera" type="file" accept="image/*" capture="environment" hidden />
+              <p class="photo-help" id="completed-photo-help">写真は複数追加できます。PCではこの欄をクリックして Ctrl＋V（Macは⌘＋V）でも貼り付けできます。</p>
+              <p class="photo-status" role="status" aria-live="polite"></p>
+            </div>
             <div class="full photo-preview" id="completed-preview" hidden><p class="photo-preview-label">添付した完成写真（クリックで拡大・右上の×で削除）</p><div class="photo-preview-list" id="completed-preview-list"></div></div>
           </div>
         </section>
@@ -209,6 +244,10 @@
       const closeImageModal = () => { imageModal.hidden = true; };
       const setupPhotoCollection = (inputId, previewId, listId, photoLabel) => {
         const input = document.querySelector(inputId);
+        const controls = document.querySelector(inputId + '-controls');
+        const cameraInput = document.querySelector(inputId + '-camera');
+        const photoStatus = controls.querySelector('.photo-status');
+        controls.tabIndex = 0;
         const preview = document.querySelector(previewId);
         const list = document.querySelector(listId);
         let photos = [];
@@ -245,13 +284,44 @@
           });
           preview.hidden = photos.length === 0;
         };
-        input.addEventListener('change', () => {
-          [...input.files].forEach((file) => photos.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
-          input.value = '';
+        const addFiles = (files) => {
+          const images = [...files].filter((file) => file.type.startsWith('image/'));
+          images.forEach((file) => photos.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
           render();
+          photoStatus.textContent = images.length ? images.length + '枚の写真を追加しました。' : '画像が見つかりませんでした。写真・ファイルを選択してください。';
+          if (images.length && inputId === '#slip-photo') document.dispatchEvent(new CustomEvent('slip-photos-added', { detail: { files: images } }));
+          return images.length;
+        };
+        [input, cameraInput].forEach((fileInput) => {
+          fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) addFiles(fileInput.files);
+            fileInput.value = '';
+          });
+        });
+        controls.querySelector('[data-photo-action="select"]').addEventListener('click', () => input.click());
+        controls.querySelector('[data-photo-action="camera"]').addEventListener('click', () => cameraInput.click());
+        controls.querySelector('[data-photo-action="paste"]').addEventListener('click', async () => {
+          if (!navigator.clipboard?.read) {
+            photoStatus.textContent = 'この欄で Ctrl＋V（Macは⌘＋V）を押すか、写真・ファイルを選択してください。';
+            return;
+          }
+          try {
+            const items = await navigator.clipboard.read();
+            const files = [];
+            for (const item of items) {
+              const type = item.types.find((type) => type.startsWith('image/'));
+              if (!type) continue;
+              const blob = await item.getType(type);
+              files.push(new File([blob], 'clipboard-' + Date.now() + '-' + (files.length + 1) + '.' + type.split('/')[1].replace('jpeg', 'jpg'), { type }));
+            }
+            addFiles(files);
+          } catch {
+            photoStatus.textContent = 'クリップボードを読み取れませんでした。この欄で Ctrl＋V（Macは⌘＋V）を押すか、写真・ファイルを選択してください。';
+          }
         });
         let savedPhotoIds = [];
         return {
+          addFiles,
           getNewPhotos: () => photos.filter((photo) => photo.file),
           setExistingPhotos: (existingPhotos) => {
             savedPhotoIds = existingPhotos.map((photo) => photo.id);
@@ -263,6 +333,13 @@
       };
       const slipPhotoCollection = setupPhotoCollection('#slip-photo', '#slip-preview', '#slip-preview-list', '伝票写真');
       const completedPhotoCollection = setupPhotoCollection('#completed-photo', '#completed-preview', '#completed-preview-list', '完成写真');
+      document.addEventListener('paste', (event) => {
+        const files = [...(event.clipboardData?.files ?? [])].filter((file) => file.type.startsWith('image/'));
+        if (!files.length || !imageModal.hidden) return;
+        event.preventDefault();
+        const collection = event.target.closest?.('#completed-photo-controls, #completed-preview') ? completedPhotoCollection : slipPhotoCollection;
+        collection.addFiles(files);
+      });
       document.querySelector('#close-image-modal').addEventListener('click', closeImageModal);
       imageModal.addEventListener('click', (event) => { if (event.target === imageModal) closeImageModal(); });
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeImageModal(); });
@@ -299,5 +376,6 @@
       document.querySelector('[name="registered-date"]').value = today;
       document.querySelector('[name="received-date"]').value = today;
     </script>
+    <script src="/ocr-entry.js"></script>
   </body>
 </html>
