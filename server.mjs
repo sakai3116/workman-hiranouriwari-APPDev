@@ -1,21 +1,25 @@
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 
+import { OcrService, OcrError } from './ocr-service.mjs';
+
 const host = '127.0.0.1';
 const port = Number(process.env.PORT ?? 3000);
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
-const dataDirectory = join(projectRoot, 'data');
+const dataDirectory = resolve(process.env.WORKMAN_DATA_DIR ?? join(projectRoot, 'data'));
+const ocr = new OcrService(projectRoot);
 const databasePath = join(dataDirectory, 'workman-prototype.sqlite');
 const sessions = new Map();
 
 mkdirSync(dataDirectory, { recursive: true });
 const database = new DatabaseSync(databasePath, { enableForeignKeyConstraints: true });
 database.exec(`
+  CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL) STRICT;
   CREATE TABLE IF NOT EXISTS admin_users (
     id INTEGER PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
@@ -75,6 +79,8 @@ database.exec(`
   ) STRICT;
 `);
 
+const getOcrEnabled = () => database.prepare('SELECT value FROM app_settings WHERE key = ?').get('ocr_enabled')?.value === 'true';
+
 const existingAdmin = database.prepare('SELECT id FROM admin_users WHERE username = ?').get('admin');
 if (!existingAdmin) {
   const passwordSalt = randomBytes(16).toString('hex');
@@ -132,7 +138,7 @@ document.querySelector('#entry-form').addEventListener('submit',async event=>{ev
     }
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:;"
+      'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;"
     });
     response.end(page);
   } catch (error) {
@@ -150,7 +156,7 @@ const serveEditPage = async (response) => {
     ]);
     response.writeHead(200, {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:;"
+      'Content-Security-Policy': "default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: blob:;"
     });
     response.end(page.replace('</body>', `<script>${editScript}</script></body>`));
   } catch (error) {
@@ -254,6 +260,28 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && pathname === '/admin') return servePage(response, 'admin.html');
     if (request.method === 'GET' && pathname.startsWith('/uploads/')) return serveUpload(response, pathname);
 
+    if (request.method === 'GET' && pathname === '/ocr-entry.js') {
+      response.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8' });
+      response.end(await readFile(join(projectRoot, 'public', 'ocr-entry.js'), 'utf8')); return;
+    }
+    if (request.method === 'GET' && pathname === '/api/features') return sendJson(response, 200, { ocrEnabled: getOcrEnabled(), ocrReady: ocr.ready }, { 'Cache-Control': 'no-store' });
+    if (request.method === 'PUT' && pathname === '/api/admin/ocr') {
+      if (!requireAdmin(request, response)) return;
+      const payload = await readJsonBody(request);
+      if (typeof payload.enabled !== 'boolean') return sendJson(response, 400, { error: 'ONまたはOFFを指定してください。' });
+      database.prepare('INSERT INTO app_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('ocr_enabled', String(payload.enabled));
+      if (!payload.enabled) ocr.cancel();
+      return sendJson(response, 200, { enabled: getOcrEnabled(), ready: ocr.ready });
+    }
+    if (request.method === 'POST' && pathname === '/api/ocr/recognize') {
+      if (!getOcrEnabled()) return sendJson(response, 403, { error: '管理画面でOCR自動入力がOFFになっています。' });
+      try {
+        const result = await ocr.recognize(await readJsonBody(request));
+        if (!getOcrEnabled()) return sendJson(response, 403, { error: 'OCRがOFFになったため、結果は反映しません。' });
+        return sendJson(response, 200, result);
+      } catch (error) { return sendJson(response, error instanceof OcrError ? error.status : error instanceof SyntaxError || error.message === 'Request body is too large.' ? 400 : 503, { error: error instanceof OcrError ? error.message : error instanceof SyntaxError ? '写真データが不正です。' : 'OCRを開始できませんでした。画像サイズや実行環境を確認してください。' }); }
+    }
+
     if (request.method === 'POST' && pathname === '/api/admin/login') {
       const { username, password } = await readJsonBody(request);
       const user = database.prepare('SELECT username, password_salt, password_hash FROM admin_users WHERE username = ?').get(username);
@@ -299,7 +327,7 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && pathname === '/api/admin/status') {
       if (!requireAdmin(request, response)) return;
       const requestCount = database.prepare('SELECT COUNT(*) AS count FROM requests').get().count;
-      return sendJson(response, 200, { databasePath, requestCount });
+      return sendJson(response, 200, { databasePath, requestCount, ocrEnabled: getOcrEnabled(), ocrReady: ocr.ready });
     }
 
     if (request.method === 'GET' && pathname === '/api/admin/requests') {

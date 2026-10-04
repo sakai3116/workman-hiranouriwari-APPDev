@@ -38,6 +38,10 @@
       .choice-button:hover { border-color: #d7a239; background: #fff7e7; }
       .choice-button.is-selected { border-color: var(--yellow); background: var(--yellow); color: var(--text); }
       .choice-button:focus-visible { outline: 3px solid #f8d88d; outline-offset: 2px; }
+      .ocr-panel { margin-top: 12px; padding: 10px; background: var(--cream); border-radius: 7px; font-size: .85rem; }
+      .ocr-panel input[type="checkbox"] { width: auto; margin-right: 6px; }
+      .ocr-filled { background: #fff5d6; border-color: #d9910c; }
+      [hidden] { display: none !important; }
       .photo-input { min-width: 0; }
       .photo-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 7px; }
       .photo-controls .button { min-height: 44px; padding: 10px 12px; }
@@ -285,6 +289,7 @@
           images.forEach((file) => photos.push({ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }));
           render();
           photoStatus.textContent = images.length ? images.length + '枚の写真を追加しました。' : '画像が見つかりませんでした。写真・ファイルを選択してください。';
+          if (images.length && inputId === '#slip-photo') document.dispatchEvent(new CustomEvent('slip-photos-added', { detail: { files: images } }));
           return images.length;
         };
         [input, cameraInput].forEach((fileInput) => {
@@ -371,5 +376,6 @@
       document.querySelector('[name="registered-date"]').value = today;
       document.querySelector('[name="received-date"]').value = today;
     </script>
+    <script src="/ocr-entry.js"></script>
   </body>
 </html>
